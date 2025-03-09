@@ -1,0 +1,85 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #0c9b79;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.form-container {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 320px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.form-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+button {
+  width: 100%;
+  background-color: #047857;
+  color: white;
+  border: none;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #036d4a;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+}
+
+.success {
+  color: green;
+  font-size: 14px;
+}
+
+.forgot-password {
+  text-align: left;
+  font-size: 14px;
+  color: #036d4a;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.redirect-text {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.link {
+  color: #036d4a;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
