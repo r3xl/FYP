@@ -1,5 +1,5 @@
 import React from 'react';
-import './HomePageStyles.css'; // CSS file for styling
+import './HomePageStyles.css';
 
 const Homepage = () => {
   return (
@@ -7,40 +7,106 @@ const Homepage = () => {
       {/* Header */}
       <header className="header">
         <div className="logo">
-          <h1>AutoVision 3D</h1>
+          <h1>Logo</h1>
         </div>
-        <nav className="navbar">
-          <ul>
-            <li><a href="/homepage">Home</a></li>
-            <li><a href="/profile">Profile</a></li>
-            <li><a href="/logout">Logout</a></li>
-          </ul>
+        <nav className="nav-links">
+          <a href="/homepage" className="active">Home</a>
+          <a href="/services">Services</a>
+          <a href="/sell">Sell</a>
+          <a href="/about">About</a>
+          <a href="/contact" className="contact-link">Contact</a>
+          <a href="/buy-now" className="buy-now-link">Buy Now</a>
         </nav>
       </header>
 
-      {/* Menu Bar */}
-      <nav className="menu-bar">
-        <ul>
-          <li><a href="/about">About</a></li>
-          <li><a href="/services">Services</a></li>
-          <li><a href="/contact">Contact</a></li>
-          <li><a href="/help">Help</a></li>
-        </ul>
-      </nav>
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <h2>Welcome to AutoVision</h2>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
+            varius enim in eros elementum tristique. Duis cursus, mi quis viverra
+            ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat.
+          </p>
+          <div className="hero-buttons">
+            <a href="/buy-now" className="buy-now-btn">Buy Now</a>
+            <a href="/contact" className="contact-btn">Contact</a>
+          </div>
+        </div>
+        <div className="hero-image">
+          {/* Image placeholder */}
+        </div>
+      </section>
 
-      {/* Main Content */}
-      <main className="main-content">
-        <h2>Welcome to the Homepage!</h2>
-        <p>You're successfully logged in. Enjoy exploring the features of AutoVision 3D.</p>
-      </main>
+      {/* Our Services Section */}
+      <section className="services-section">
+        <h2>Our Services</h2>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.
+        </p>
+        <div className="services-container">
+          <div className="service-item">
+            <i className="fas fa-cube"></i>
+            <h3>Highlight value one</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+          <div className="service-item">
+            <i className="fas fa-cube"></i>
+            <h3>Highlight value two</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+          <div className="service-item">
+            <i className="fas fa-cube"></i>
+            <h3>Highlight value three</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Cars Section */}
+      <section className="popular-cars-section">
+        <h2>Popular Cars</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        <div className="cars-container">
+          <div className="car-item">
+            <div className="car-image"></div>
+            <h3>Car 1</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+          <div className="car-item">
+            <div className="car-image"></div>
+            <h3>Car 2</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+          <div className="car-item">
+            <div className="car-image"></div>
+            <h3>Car 3</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+          <div className="car-item">
+            <div className="car-image"></div>
+            <h3>Car 4</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+        </div>
+        <button className="view-all-btn">View all</button>
+      </section>
 
       {/* Footer */}
       <footer className="footer">
-        <p>&copy; 2025 AutoVision 3D. All rights reserved.</p>
-        <div className="social-links">
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a>
-          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">Twitter</a>
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
+        <div className="footer-content">
+          <p>© 2025 AutoVision 3D. All rights reserved.</p>
+          <div className="social-links">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
+              <i className="fab fa-facebook"></i>
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+              <i className="fab fa-twitter"></i>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+              <i className="fab fa-instagram"></i>
+            </a>
+          </div>
         </div>
       </footer>
     </div>

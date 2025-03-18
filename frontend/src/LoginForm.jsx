@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; // Import Axios
-import './FormStyles.css';
+import axios from 'axios';
+import './HomePageStyles.css';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -37,28 +37,51 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="form-container">
-      <h2 className="form-title">Login</h2>
-      {error && <p className="error">{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your password"
-        />
-        <p className="forgot-password">Forgot password?</p>
-        <button type="submit">Login</button>
-      </form>
-      <p className="redirect-text">
-        Don’t have an account? <span className="link" onClick={() => navigate('/register')}>Signup</span>
-      </p>
+    <div className="homepage-container">
+      {/* Header matching homepage */}
+      <header className="header">
+        <h1>AutoVision 3D</h1>
+        <nav className="nav-links">
+          <span className="link" onClick={() => navigate('/register')}>Signup</span>
+        </nav>
+      </header>
+
+      {/* Main Content */}
+      <main className="main-content" style={{ maxWidth: '500px', margin: '0 auto' }}>
+        <div className="form-container">
+          <h2 className="form-title">Login</h2>
+          {error && <p className="error">{error}</p>}
+          <form onSubmit={handleSubmit}>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+            />
+            <button type="submit">Login</button>
+          </form>
+          <p className="redirect-text">
+            Don’t have an account? {' '}
+            <span className="link" onClick={() => navigate('/register')}>Signup</span>
+          </p>
+        </div>
+      </main>
+
+      {/* Footer matching homepage */}
+      <footer className="footer">
+        <div className="footer-content">
+          <p>© 2025 AutoVision 3D. All rights reserved.</p>
+          <div className="social-links">
+            {/* Social links same as homepage */}
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
