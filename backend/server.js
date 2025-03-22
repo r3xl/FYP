@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import authRoutes from './routes/authRoutes.js'; // Add `.js` to module imports
+import authRoutes from './routes/authRoutes.js'; 
 
 const app = express();
 app.use(express.json());

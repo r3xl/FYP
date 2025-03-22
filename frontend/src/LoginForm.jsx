@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import './HomePageStyles.css';
+import './FormStyles.css';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -37,17 +37,17 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="homepage-container">
-      {/* Header matching homepage */}
-      <header className="header">
-        <h1>AutoVision 3D</h1>
-        <nav className="nav-links">
+    <div className="auth-container">
+      {/* Header */}
+      <header className="auth-header">
+        <h1>AutoVision</h1>
+        <nav className="auth-nav">
           <span className="link" onClick={() => navigate('/register')}>Signup</span>
         </nav>
       </header>
 
       {/* Main Content */}
-      <main className="main-content" style={{ maxWidth: '500px', margin: '0 auto' }}>
+      <main className="main-content">
         <div className="form-container">
           <h2 className="form-title">Login</h2>
           {error && <p className="error">{error}</p>}
@@ -67,20 +67,15 @@ const LoginForm = () => {
             <button type="submit">Login</button>
           </form>
           <p className="redirect-text">
-            Don’t have an account? {' '}
+            Don't have an account? {' '}
             <span className="link" onClick={() => navigate('/register')}>Signup</span>
           </p>
         </div>
       </main>
 
-      {/* Footer matching homepage */}
-      <footer className="footer">
-        <div className="footer-content">
-          <p>© 2025 AutoVision 3D. All rights reserved.</p>
-          <div className="social-links">
-            {/* Social links same as homepage */}
-          </div>
-        </div>
+      {/* Footer */}
+      <footer className="auth-footer">
+        <p>© 2025 AutoVision. All rights reserved.</p>
       </footer>
     </div>
   );
