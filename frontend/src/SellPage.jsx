@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './SellPage.css';
 
@@ -14,15 +14,29 @@ const SellPage = () => {
     description: '',
     message: '',
     terms: false,
-    images: []
+    images: [],
+    model3d: null
   });
   const [errors, setErrors] = useState({});
   const [showPopup, setShowPopup] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  
+  // Check for authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
   
   // Function to handle logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('name');
+    localStorage.removeItem('userId');
     navigate('/login');
   };
 
@@ -72,6 +86,17 @@ const SellPage = () => {
     });
   };
 
+  // Handle 3D model upload
+  const handle3DModelUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({
+        ...formData,
+        model3d: file
+      });
+    }
+  };
+
   // Remove uploaded image
   const removeImage = (index) => {
     const updatedImages = [...formData.images];
@@ -79,6 +104,14 @@ const SellPage = () => {
     setFormData({
       ...formData,
       images: updatedImages
+    });
+  };
+
+  // Remove 3D model
+  const remove3DModel = () => {
+    setFormData({
+      ...formData,
+      model3d: null
     });
   };
   
@@ -90,19 +123,66 @@ const SellPage = () => {
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.topic) newErrors.topic = 'Please select a topic';
-    if (!formData.description) newErrors.description = 'Please select an option';
-    if (!formData.message.trim()) newErrors.message = 'Message is required';
+    if (!formData.topic) newErrors.topic = 'Please select a car type';
+    if (!formData.description) newErrors.description = 'Please select a car brand';
+    if (!formData.message.trim()) newErrors.message = 'Vehicle details are required';
     if (!formData.terms) newErrors.terms = 'You must accept the terms';
-    // Add validation for images
+    
+    // Make images mandatory instead of 3D model
     if (formData.images.length === 0) newErrors.images = 'At least one image is required';
     
     return newErrors;
   };
 
+  // Open Terms Modal
+  const openTermsModal = (e) => {
+    e.preventDefault();
+    setShowTermsModal(true);
+  };
+
+  // Close Terms Modal
+  const closeTermsModal = () => {
+    setShowTermsModal(false);
+  };
+
+  // Accept terms
+  const acceptTerms = () => {
+    setFormData({
+      ...formData,
+      terms: true
+    });
+    setShowTermsModal(false);
+  };
+
+  // View listings button handler
+  const viewListings = () => {
+    setShowSuccess(false);
+    navigate('/buy');
+  };
+
+  // Create new listing button handler
+  const createNewListing = () => {
+    setShowSuccess(false);
+    // Reset form
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      topic: '',
+      description: '',
+      message: '',
+      terms: false,
+      images: [],
+      model3d: null
+    });
+    setApiError(null);
+  };
+
   // Form submit handler
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate form
@@ -113,7 +193,7 @@ const SellPage = () => {
       setErrors(formErrors);
       setShowPopup(true);
       
-      // Hide popup after 5 seconds (increased from 3)
+      // Hide popup after 5 seconds
       setTimeout(() => {
         setShowPopup(false);
       }, 5000);
@@ -121,9 +201,77 @@ const SellPage = () => {
       return;
     }
     
-    // Form submission logic would go here
-    console.log('Form submitted', formData);
-    alert('Form submitted successfully!');
+    // Reset any previous API errors
+    setApiError(null);
+    
+    // Set loading state
+    setIsSubmitting(true);
+    
+    // Create FormData object for file uploads
+    const submissionData = new FormData();
+    submissionData.append('firstName', formData.firstName);
+    submissionData.append('lastName', formData.lastName);
+    submissionData.append('email', formData.email);
+    submissionData.append('phone', formData.phone);
+    submissionData.append('topic', formData.topic);
+    submissionData.append('description', formData.description);
+    submissionData.append('message', formData.message);
+    
+    // Add images
+    formData.images.forEach((image) => {
+      submissionData.append('images', image);
+    });
+    
+    // Add 3D model if exists
+    if (formData.model3d) {
+      submissionData.append('model3d', formData.model3d);
+    }
+    
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      setApiError('You must be logged in to submit a listing');
+      setIsSubmitting(false);
+      return;
+    }
+    
+    try {
+      // API endpoint - make sure this matches your backend
+      const endpoint = 'http://localhost:5173/';
+      
+      console.log(`Submitting to: ${endpoint}`);
+      console.log('Token:', token);
+      
+      // Send data to backend
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: submissionData
+      });
+      
+      // Check if response is ok before parsing JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error (${response.status}): ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      console.log('Submission successful:', data);
+      
+      // Show success modal
+      setShowSuccess(true);
+      
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setApiError(`Error: ${error.message}`);
+    } finally {
+      // Reset loading state
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -139,6 +287,81 @@ const SellPage = () => {
                 <li key={index}>{error}</li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+      
+      {/* API Error Message */}
+      {apiError && (
+        <div className="validation-popup">
+          <div className="popup-content error-popup">
+            <span className="close-popup" onClick={() => setApiError(null)}>&times;</span>
+            <h3>Submission Error</h3>
+            <p>{apiError}</p>
+            <p className="error-help">Please check your network connection and try again. If the problem persists, contact support.</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Success Popup */}
+      {showSuccess && (
+        <div className="success-popup-overlay">
+          <div className="success-popup">
+            <div className="success-icon">✓</div>
+            <h2>Listing Submitted Successfully!</h2>
+            <p>Your car listing has been added to our database and is now visible to potential buyers.</p>
+            <div className="success-actions">
+              <button className="btn-primary" onClick={viewListings}>View Listings</button>
+              <button className="btn-outline" onClick={createNewListing}>Create New Listing</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Terms of Service Modal */}
+      {showTermsModal && (
+        <div className="terms-modal-overlay">
+          <div className="terms-modal">
+            <span className="close-modal" onClick={closeTermsModal}>&times;</span>
+            <h2>Terms of Service</h2>
+            <div className="terms-content">
+              <h3>1. Acceptance of Terms</h3>
+              <p>By accessing and using the AutoVision service ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use the Service.</p>
+              
+              <h3>2. Description of Service</h3>
+              <p>AutoVision provides an online platform for users to list, browse, and purchase vehicles. The Service includes all aspects of the AutoVision website and related applications.</p>
+              
+              <h3>3. User Accounts</h3>
+              <p>To use certain features of the Service, you must register for an account. You are responsible for maintaining the confidentiality of your account information and for all activities that occur under your account.</p>
+              
+              <h3>4. Listing Requirements</h3>
+              <p>When listing a vehicle, you agree to provide accurate, complete, and up-to-date information about the vehicle. You may not list vehicles that you do not own or are not authorized to sell.</p>
+              
+              <h3>5. Prohibited Content</h3>
+              <p>You may not post content that is illegal, fraudulent, deceptive, misleading, or that infringes on the rights of others.</p>
+              
+              <h3>6. Fees and Payments</h3>
+              <p>AutoVision may charge fees for certain features of the Service. All fees are non-refundable unless otherwise specified.</p>
+              
+              <h3>7. Privacy Policy</h3>
+              <p>Your use of the Service is subject to our Privacy Policy, which is incorporated into these Terms by reference.</p>
+              
+              <h3>8. Limitation of Liability</h3>
+              <p>AutoVision shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the Service.</p>
+              
+              <h3>9. Termination</h3>
+              <p>AutoVision may terminate or suspend your access to the Service at any time, without notice, for any reason.</p>
+              
+              <h3>10. Changes to Terms</h3>
+              <p>AutoVision reserves the right to modify these Terms at any time. Your continued use of the Service after any such changes constitutes your acceptance of the new Terms.</p>
+              
+              <h3>11. Governing Law</h3>
+              <p>These Terms shall be governed by the laws of the jurisdiction in which AutoVision is established, without regard to its conflict of law provisions.</p>
+            </div>
+            <div className="terms-actions">
+              <button className="btn-primary" onClick={acceptTerms}>Accept</button>
+              <button className="btn-outline" onClick={closeTermsModal}>Decline</button>
+            </div>
           </div>
         </div>
       )}
@@ -231,7 +454,7 @@ const SellPage = () => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="topic">Choose a topic</label>
+              <label htmlFor="topic">Car Type</label>
               <select 
                 id="topic" 
                 className={`form-select ${errors.topic ? 'input-error' : ''}`}
@@ -239,85 +462,139 @@ const SellPage = () => {
                 onChange={handleInputChange}
               >
                 <option value="" disabled>Select one...</option>
-                <option value="sell">Sell my car</option>
-                <option value="trade">Trade-in</option>
-                <option value="value">Car valuation</option>
+                <option value="sedan">Sedan</option>
+                <option value="suv">SUV</option>
+                <option value="sports">Sports Car</option>
+                <option value="luxury">Luxury</option>
+                <option value="pickup">Pickup Truck</option>
+                <option value="hatchback">Hatchback</option>
+                <option value="convertible">Convertible</option>
+                <option value="minivan">Minivan</option>
+                <option value="electric">Electric Vehicle</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="compact">Compact</option>
+                <option value="coupe">Coupe</option>
+                <option value="wagon">Wagon</option>
                 <option value="other">Other</option>
               </select>
               {errors.topic && <span className="error-message">{errors.topic}</span>}
             </div>
             
             <div className="form-group">
-              <label>Which best describes you?</label>
+              <label>Car Brand</label>
               <div className={`radio-group ${errors.description ? 'input-error' : ''}`}>
                 <div className="radio-column">
                   <div className="radio-option">
                     <input 
                       type="radio" 
-                      id="choice1" 
+                      id="toyota" 
                       name="description" 
-                      value="choice1" 
-                      checked={formData.description === 'choice1'}
+                      value="toyota" 
+                      checked={formData.description === 'toyota'}
                       onChange={handleRadioChange}
                     />
-                    <label htmlFor="choice1">First choice</label>
+                    <label htmlFor="toyota">Toyota</label>
                   </div>
                   <div className="radio-option">
                     <input 
                       type="radio" 
-                      id="choice3" 
+                      id="honda" 
                       name="description" 
-                      value="choice3" 
-                      checked={formData.description === 'choice3'}
+                      value="honda" 
+                      checked={formData.description === 'honda'}
                       onChange={handleRadioChange}
                     />
-                    <label htmlFor="choice3">Third choice</label>
+                    <label htmlFor="honda">Honda</label>
                   </div>
                   <div className="radio-option">
                     <input 
                       type="radio" 
-                      id="choice5" 
+                      id="ford" 
                       name="description" 
-                      value="choice5" 
-                      checked={formData.description === 'choice5'}
+                      value="ford" 
+                      checked={formData.description === 'ford'}
                       onChange={handleRadioChange}
                     />
-                    <label htmlFor="choice5">Fifth choice</label>
+                    <label htmlFor="ford">Ford</label>
+                  </div>
+                  <div className="radio-option">
+                    <input 
+                      type="radio" 
+                      id="bmw" 
+                      name="description" 
+                      value="bmw" 
+                      checked={formData.description === 'bmw'}
+                      onChange={handleRadioChange}
+                    />
+                    <label htmlFor="bmw">BMW</label>
+                  </div>
+                  <div className="radio-option">
+                    <input 
+                      type="radio" 
+                      id="audi" 
+                      name="description" 
+                      value="audi" 
+                      checked={formData.description === 'audi'}
+                      onChange={handleRadioChange}
+                    />
+                    <label htmlFor="audi">Audi</label>
                   </div>
                 </div>
                 <div className="radio-column">
                   <div className="radio-option">
                     <input 
                       type="radio" 
-                      id="choice2" 
+                      id="mercedes" 
                       name="description" 
-                      value="choice2" 
-                      checked={formData.description === 'choice2'}
+                      value="mercedes" 
+                      checked={formData.description === 'mercedes'}
                       onChange={handleRadioChange}
                     />
-                    <label htmlFor="choice2">Second choice</label>
+                    <label htmlFor="mercedes">Mercedes-Benz</label>
                   </div>
                   <div className="radio-option">
                     <input 
                       type="radio" 
-                      id="choice4" 
+                      id="hyundai" 
                       name="description" 
-                      value="choice4" 
-                      checked={formData.description === 'choice4'}
+                      value="hyundai" 
+                      checked={formData.description === 'hyundai'}
                       onChange={handleRadioChange}
                     />
-                    <label htmlFor="choice4">Fourth choice</label>
+                    <label htmlFor="hyundai">Hyundai</label>
                   </div>
                   <div className="radio-option">
                     <input 
                       type="radio" 
-                      id="choice6" 
+                      id="nissan" 
                       name="description" 
-                      value="choice6" 
-                      checked={formData.description === 'choice6'}
+                      value="nissan" 
+                      checked={formData.description === 'nissan'}
                       onChange={handleRadioChange}
                     />
-                    <label htmlFor="choice6">Other</label>
+                    <label htmlFor="nissan">Nissan</label>
+                  </div>
+                  <div className="radio-option">
+                    <input 
+                      type="radio" 
+                      id="chevrolet" 
+                      name="description" 
+                      value="chevrolet" 
+                      checked={formData.description === 'chevrolet'}
+                      onChange={handleRadioChange}
+                    />
+                    <label htmlFor="chevrolet">Chevrolet</label>
+                  </div>
+                  <div className="radio-option">
+                    <input 
+                      type="radio" 
+                      id="other_brand" 
+                      name="description" 
+                      value="other_brand" 
+                      checked={formData.description === 'other_brand'}
+                      onChange={handleRadioChange}
+                    />
+                    <label htmlFor="other_brand">Other</label>
                   </div>
                 </div>
               </div>
@@ -325,56 +602,93 @@ const SellPage = () => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="message">Message</label>
+              <label htmlFor="message">Vehicle Details</label>
               <textarea 
                 id="message" 
                 className={`form-textarea ${errors.message ? 'input-error' : ''}`}
-                placeholder="Please provide details about your car (make, model, year, condition, etc.)"
+                placeholder="Please provide details about your car (model, year, mileage, condition, features, history, etc.)"
                 value={formData.message}
                 onChange={handleInputChange}
               ></textarea>
               {errors.message && <span className="error-message">{errors.message}</span>}
             </div>
             
-            {/* Image Upload Section - Now Mandatory */}
+            {/* Image Upload Section - Required */}
             <div className="form-group">
-            <label htmlFor="image-upload">Upload Images <span className="required-star">*</span></label>
-            <div className={`image-upload-container ${errors.images ? 'input-error' : ''}`}>
+              <label htmlFor="image-upload">Upload Images <span className="required-star">*</span></label>
+              <div className={`image-upload-container ${errors.images ? 'input-error' : ''}`}>
                 <input 
-                type="file" 
-                id="image-upload" 
-                className="image-upload-input" 
-                multiple 
-                accept="image/*"
-                onChange={handleImageUpload}
+                  type="file" 
+                  id="image-upload" 
+                  className="image-upload-input" 
+                  multiple 
+                  accept="image/*"
+                  onChange={handleImageUpload}
                 />
                 <label htmlFor="image-upload" className="image-upload-label">
-                <span className="upload-icon">📷</span>
-                <span>Choose files or drag and drop</span>
-                <span className="upload-note">At least one image required</span>
+                  <span className="upload-icon">📷</span>
+                  <span>Choose files or drag and drop</span>
+                  <span className="upload-note">At least one image required</span>
                 </label>
-            </div>
-            {errors.images && <span className="error-message">{errors.images}</span>}
-            
-            {/* Preview of uploaded images */}
-            {formData.images.length > 0 && (
+              </div>
+              {errors.images && <span className="error-message">{errors.images}</span>}
+              
+              {/* Preview of uploaded images */}
+              {formData.images.length > 0 && (
                 <div className="image-preview-container">
-                {formData.images.map((image, index) => (
+                  {formData.images.map((image, index) => (
                     <div key={index} className="image-preview-item">
-                    <div className="image-preview">
+                      <div className="image-preview">
                         <img src={URL.createObjectURL(image)} alt={`Preview ${index}`} />
-                    </div>
-                    <span 
+                      </div>
+                      <span 
                         className="remove-image" 
                         onClick={() => removeImage(index)}
-                    >
+                      >
                         &times;
-                    </span>
-                    <span className="image-name">{image.name}</span>
+                      </span>
+                      <span className="image-name">{image.name}</span>
                     </div>
-                ))}
+                  ))}
                 </div>
-            )}
+              )}
+            </div>
+            
+            {/* 3D Model Upload Section - Optional */}
+            <div className="form-group">
+              <label htmlFor="model-upload">Upload 3D Model (Optional)</label>
+              <div className="model-upload-container">
+                <input 
+                  type="file" 
+                  id="model-upload" 
+                  className="model-upload-input" 
+                  accept=".obj,.glb,.gltf,.stl,.fbx"
+                  onChange={handle3DModelUpload}
+                />
+                <label htmlFor="model-upload" className="model-upload-label">
+                  <span className="upload-icon">🚘</span>
+                  <span>Choose 3D model file</span>
+                  <span className="upload-note">Supported formats: OBJ, GLB, GLTF, STL, FBX</span>
+                </label>
+              </div>
+              
+              {/* Preview of uploaded 3D model */}
+              {formData.model3d && (
+                <div className="model-preview-container">
+                  <div className="model-preview-item">
+                    <div className="model-preview">
+                      <span className="model-icon">🏁</span>
+                    </div>
+                    <span 
+                      className="remove-model" 
+                      onClick={remove3DModel}
+                    >
+                      &times;
+                    </span>
+                    <span className="model-name">{formData.model3d.name}</span>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className={`form-group terms-checkbox ${errors.terms ? 'input-error' : ''}`}>
@@ -384,12 +698,27 @@ const SellPage = () => {
                 checked={formData.terms}
                 onChange={handleInputChange}
               />
-              <label htmlFor="terms">I accept the Terms</label>
+              <label htmlFor="terms">
+                I accept the <a href="#" onClick={openTermsModal}>Terms of Service</a>
+              </label>
               {errors.terms && <span className="error-message">{errors.terms}</span>}
             </div>
             
             <div className="form-group submit-container">
-              <button type="submit" className="btn-primary submit-btn">Submit</button>
+              <button 
+                type="submit" 
+                className={`btn-primary submit-btn ${isSubmitting ? 'submitting' : ''}`}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="spinner"></span>
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Listing'
+                )}
+              </button>
             </div>
           </form>
         </div>
