@@ -238,7 +238,7 @@ const SellPage = () => {
     
     try {
       // API endpoint - make sure this matches your backend
-      const endpoint = 'http://localhost:5173/';
+      const endpoint = 'http://localhost:5000/api/car-listings';
       
       console.log(`Submitting to: ${endpoint}`);
       console.log('Token:', token);

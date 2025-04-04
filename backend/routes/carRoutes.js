@@ -1,9 +1,8 @@
-// routes/carRoutes.js
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { auth } from '../middleware/auth.js';
+import { auth } from '../routes/auth.js';
 import { 
   createCarListing, 
   getAllCarListings,
@@ -36,6 +35,11 @@ const uploadsDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+
+// Serve uploaded files as static files
+router.use('/uploads', express.static(uploadsDir));
+router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 
 // File upload middleware
 const fileFields = [
