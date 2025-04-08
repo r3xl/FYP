@@ -377,11 +377,11 @@ const SellPage = () => {
             <span className={`hamburger ${mobileMenuOpen ? 'active' : ''}`}></span>
           </div>
           <ul className={`nav-links ${mobileMenuOpen ? 'active' : ''}`}>
-            <li><Link to="/">Home</Link></li>
-            <li><a href="#" onClick={(e) => { e.preventDefault(); navigateToHomeSection('popular'); }}>Popular</a></li>
-            <li><Link to="/sell">Sell</Link></li>
-            <li><Link to="/about">About</Link></li>
-            <li><Link to="/contact" className="btn-outline">Contact</Link></li>
+            <li><Link to="/homepage">Home</Link></li>
+            <li><Link to="/homepage">Popular</Link></li>
+            {/* <li><Link to="/sell">Sell</Link></li> */}
+            <li><Link to="/homepage#about">About</Link></li>
+            <li><Link to="/homepage#contact" className="btn-outline">Contact</Link></li>
             <li><Link to="/buy" className="btn-primary">Buy Now</Link></li>
           </ul>
         </nav>

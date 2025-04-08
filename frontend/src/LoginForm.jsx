@@ -37,45 +37,62 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="auth-container">
+    <div className="homepage-container auth-container">
       {/* Header */}
-      <header className="auth-header">
-        <h1>AutoVision</h1>
-        <nav className="auth-nav">
-          <span className="link" onClick={() => navigate('/register')}>Signup</span>
+      <header className="header auth-header">
+        <div className="logo">
+          <span className="logo-icon">🚗</span>
+          <h1>AutoVision</h1>
+        </div>
+        <nav className="navbar">
+          <ul className="nav-links">
+            <li><span className="btn-outline" onClick={() => navigate('/register')}>Sign Up</span></li>
+          </ul>
         </nav>
       </header>
 
       {/* Main Content */}
       <main className="main-content">
         <div className="form-container">
-          <h2 className="form-title">Login</h2>
+          <h2 className="form-title">Welcome Back</h2>
           {error && <p className="error">{error}</p>}
           <form onSubmit={handleSubmit}>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-            />
-            <button type="submit">Login</button>
+            <div className="form-group">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="form-input"
+              />
+            </div>
+            <button type="submit" className="btn-primary form-button">Login</button>
           </form>
           <p className="redirect-text">
             Don't have an account? {' '}
-            <span className="link" onClick={() => navigate('/register')}>Signup</span>
+            <span className="link" onClick={() => navigate('/register')}>Sign Up</span>
           </p>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="auth-footer">
-        <p>© 2025 AutoVision. All rights reserved.</p>
+      <footer className="footer">
+        <div className="footer-bottom">
+          <p>© 2025 AutoVision. All rights reserved.</p>
+          <div className="footer-bottom-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+          </div>
+        </div>
       </footer>
     </div>
   );

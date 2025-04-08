@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; // Import Axios
+import axios from 'axios';
 import './FormStyles.css';
 
 const RegistrationForm = () => {
-  const [name, setName] = useState(''); // State for name
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -46,7 +46,9 @@ const RegistrationForm = () => {
         setEmail('');
         setPassword('');
         setConfirmPassword('');
-        navigate('/login'); // Redirect to login after successful signup
+        setTimeout(() => {
+          navigate('/login'); // Redirect to login after successful signup with a small delay
+        }, 1500);
       }
     } catch (error) {
       if (error.response) {
@@ -58,40 +60,83 @@ const RegistrationForm = () => {
   };
 
   return (
-    <div className="form-container">
-      <h2 className="form-title">Signup</h2>
-      {error && <p className="error">{error}</p>}
-      {success && <p className="success">Registration successful!</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your name"
-        />
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Create a password"
-        />
-        <input
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm your password"
-        />
-        <button type="submit">Signup</button>
-      </form>
-      <p className="redirect-text">
-        Already have an account? <span className="link" onClick={() => navigate('/login')}>Login</span>
-      </p>
+    <div className="homepage-container auth-container">
+      {/* Header */}
+      <header className="header auth-header">
+        <div className="logo">
+          <span className="logo-icon">🚗</span>
+          <h1>AutoVision</h1>
+        </div>
+        <nav className="navbar">
+          <ul className="nav-links">
+            <li><span className="btn-outline" onClick={() => navigate('/login')}>Login</span></li>
+          </ul>
+        </nav>
+      </header>
+
+      {/* Main Content */}
+      <main className="main-content">
+        <div className="form-container">
+          <h2 className="form-title">Create Your Account</h2>
+          {error && <p className="error">{error}</p>}
+          {success && <p className="success">Registration successful! Redirecting to login...</p>}
+          
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Create a password"
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+                className="form-input"
+              />
+            </div>
+            <button type="submit" className="btn-primary form-button">Sign Up</button>
+          </form>
+          
+          <p className="redirect-text">
+            Already have an account? <span className="link" onClick={() => navigate('/login')}>Login</span>
+          </p>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="footer">
+        <div className="footer-bottom">
+          <p>© 2025 AutoVision. All rights reserved.</p>
+          <div className="footer-bottom-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

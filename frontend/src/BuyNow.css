@@ -78,7 +78,7 @@
 
 .car-image {
   width: 100%;
-  height: 220px;
+  height: 220px;  /* Fixed height for all images */
   overflow: hidden;
   position: relative;
 }
@@ -86,7 +86,7 @@
 .car-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover;  /* This ensures the image covers the area without distortion */
   transition: transform 0.5s ease;
 }
 
@@ -662,4 +662,486 @@
   .buy-now-header {
     font-size: 1.5rem;
   }
+}
+
+.owner-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.edit-button, .delete-button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.delete-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.payment-modal {
+  background-color: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 2.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.payment-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.payment-steps::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #e0e0e0;
+  z-index: 1;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.step-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.step.active .step-number {
+  background-color: #3366ff;
+  color: white;
+}
+
+.step-text {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.step.active .step-text {
+  color: #333;
+  font-weight: 600;
+}
+
+.payment-step-content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.payment-form .form-group {
+  margin-bottom: 20px;
+}
+
+.payment-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #444;
+}
+
+.payment-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.payment-form input:focus {
+  border-color: #3366ff;
+  outline: none;
+}
+
+.payment-form input.error {
+  border-color: #e63946;
+}
+
+.error-message {
+  color: #e63946;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+}
+
+.btn-primary, .btn-outline, .btn-cancel {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary {
+  background-color: #3366ff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2952cc;
+  box-shadow: 0 2px 5px rgba(51, 102, 255, 0.3);
+}
+
+.btn-primary:disabled {
+  background-color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #3366ff;
+  border: 1px solid #3366ff;
+}
+
+.btn-outline:hover {
+  background-color: #f0f4ff;
+}
+
+.btn-cancel {
+  background-color: transparent;
+  color: #666;
+}
+
+.btn-cancel:hover {
+  background-color: #f0f0f0;
+}
+
+.btn-purchase {
+  background-color: #3366ff;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-purchase:hover {
+  background-color: #2952cc;
+  box-shadow: 0 4px 8px rgba(51, 102, 255, 0.25);
+}
+
+.payment-method-options {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.payment-method-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.payment-method-info {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.form-submit-error {
+  text-align: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #ffebee;
+  border-radius: 6px;
+}
+
+/* Fix modal visibility issue when one modal is inside another */
+.modal-overlay {
+  z-index: 1000;  /* Make sure this is a high value */
+}
+
+/* Make sure the payment modal appears on top of other modals */
+.payment-modal {
+  z-index: 1001;  /* Higher than the modal-overlay */
+}
+
+/* Add these styles for image carousel in the car details modal */
+.car-image-carousel {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.carousel-image-container {
+  width: 100%;
+  height: 350px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.carousel-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;  /* Changed to contain to show full image */
+  background-color: #f0f0f0;  /* Light background for images */
+}
+
+.carousel-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #333;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.carousel-button:hover {
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-button.prev {
+  left: 10px;
+}
+
+.carousel-button.next {
+  right: 10px;
+}
+
+.image-counter {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Image thumbnails */
+.image-thumbnails {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.thumbnail {
+  width: 80px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.thumbnail:hover {
+  opacity: 0.9;
+}
+
+.thumbnail.active {
+  opacity: 1;
+  border-color: #3366ff;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* View toggle buttons */
+.view-toggle-buttons {
+  display: flex;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  width: fit-content;
+}
+
+.view-toggle-btn {
+  padding: 8px 16px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.view-toggle-btn.active {
+  background-color: #3366ff;
+  color: white;
+}
+
+/* Special badges */
+.model3d-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #ff6633;
+  color: white;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Add these styles to your BuyNow.css file */
+
+.owner-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #4CAF50;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+.owner-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  width: 100%;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.owner-actions button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.edit-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.edit-button:hover {
+  background-color: #2980b9;
+}
+
+.delete-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  flex: 1;
+  margin-left: 8px;
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
+}
+
+/* Make sure the owner badge stands out */
+.car-item {
+  position: relative;
+}
+
+.car-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.edit-form-container {
+  padding: 20px;
+  width: 100%;
+}
+
+.edit-form-container h3 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.edit-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  resize: vertical;
 }

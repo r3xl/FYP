@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import './BuyNow.css';
 import ThreeJSModelViewer from './ThreeJSModelViewer';
 
+
 const BuyNow = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -31,7 +32,30 @@ const BuyNow = () => {
   const [errors, setErrors] = useState({});
   const [paymentStep, setPaymentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [editMode, setEditMode] = useState(false);
+  const [editingCar, setEditingCar] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    brand: '',
+    carType: '',
+    details: '',
+    email: '',
+    phone: ''
+  });
   
+  // Get user info from localStorage
+  const userName = localStorage.getItem('name');
+  const token = localStorage.getItem('token');
+  const userId = localStorage.getItem('userId');
+
+  useEffect(() => {
+    // Log current localStorage values for debugging
+    console.log("Current localStorage values:");
+    console.log("userId:", localStorage.getItem('userId'));
+    console.log("token:", localStorage.getItem('token'));
+    console.log("name:", localStorage.getItem('name'));
+  }, []);
+
   // Function to handle logout
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -45,11 +69,6 @@ const BuyNow = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  // Get user info from localStorage
-  const userName = localStorage.getItem('name');
-  const token = localStorage.getItem('token');
-  const userId = localStorage.getItem('userId');
-
   // Fetch car listings on component mount
   useEffect(() => {
     const fetchCarListings = async () => {
@@ -62,6 +81,7 @@ const BuyNow = () => {
         }
         
         const data = await response.json();
+        console.log("Fetched car listings:", data); // Debug: Log car listings
         setCarListings(data);
         setLoading(false);
       } catch (error) {
@@ -74,8 +94,41 @@ const BuyNow = () => {
     fetchCarListings();
   }, []);
 
+  // Improved isOwner function with better debugging
+  const isOwner = (listing) => {
+    // Get userId directly from localStorage each time to ensure it's current
+    const currentUserId = localStorage.getItem('userId');
+    
+    console.log("Checking ownership:");
+    console.log("Current userId:", currentUserId);
+    console.log("Listing owner:", listing?.owner);
+    
+    if (!listing) {
+      console.log("No listing provided");
+      return false;
+    }
+    
+    if (!listing.owner) {
+      console.log("Listing has no owner field");
+      return false;
+    }
+    
+    if (!currentUserId) {
+      console.log("No userId in localStorage");
+      return false;
+    }
+    
+    const isMatch = String(listing.owner) === String(currentUserId);
+    console.log("Is owner match:", isMatch);
+    return isMatch;
+  };
+
   // Function to open car details
   const openCarDetails = (car) => {
+    console.log("Opening car details:", car);
+    console.log("Current user ID:", userId);
+    console.log("Is user the owner?", isOwner(car));
+    
     setSelectedCar(car);
     setActiveImageIndex(0); // Reset image index when opening details
     setShowModelViewer(false); // Default to images view
@@ -88,18 +141,76 @@ const BuyNow = () => {
     setSelectedCar(null);
   };
 
-  // Function to check if user is owner of a listing
-  const isOwner = (listing) => {
-    return listing.owner && userId && listing.owner === userId;
-  };
-
   // Function to handle edit
   const handleEdit = (car) => {
     if (isOwner(car)) {
-      navigate(`/edit-listing/${car._id}`);
+      setEditingCar(car);
+      setEditFormData({
+        brand: car.brand,
+        carType: car.carType,
+        details: car.details,
+        email: car.email,
+        phone: car.phone
+      });
+      setEditMode(true);
+      setShowDetailsModal(true);
     } else {
       alert('You can only edit your own listings');
     }
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value
+    });
+  };
+
+  const saveEditedCar = async () => {
+    if (!editingCar || !token) return;
+    
+    try {
+      const response = await fetch(`http://localhost:5000/api/car-listings/${editingCar._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editFormData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update car listing');
+      }
+      
+      // Get the updated car data from the response
+      const updatedCar = await response.json();
+      
+      // Update the car in the listings array
+      setCarListings(carListings.map(car => 
+        car._id === editingCar._id ? { ...car, ...updatedCar } : car
+      ));
+      
+      // Update the selected car if it's the one being edited
+      if (selectedCar && selectedCar._id === editingCar._id) {
+        setSelectedCar({ ...selectedCar, ...updatedCar });
+      }
+      
+      // Exit edit mode
+      setEditMode(false);
+      setEditingCar(null);
+      
+      alert('Car listing updated successfully!');
+    } catch (error) {
+      console.error('Error updating car listing:', error);
+      alert('Failed to update car listing. Please try again.');
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setEditingCar(null);
   };
 
   // Function to show delete confirmation
@@ -121,13 +232,6 @@ const BuyNow = () => {
   // Function to handle delete
   const handleDelete = async () => {
     if (!carToDelete || !token) return;
-    
-    if (!isOwner(carToDelete)) {
-      alert('You can only delete your own listings');
-      setShowDeleteConfirm(false);
-      setCarToDelete(null);
-      return;
-    }
     
     try {
       const response = await fetch(`http://localhost:5000/api/car-listings/${carToDelete._id}`, {
@@ -183,6 +287,10 @@ const BuyNow = () => {
 
   // Open payment modal
   const openPaymentModal = () => {
+    // Close the details modal first to prevent nested modals
+    setShowDetailsModal(false);
+    
+    // Reset payment form
     setPaymentStep(1);
     setPaymentInfo({
       fullName: '',
@@ -197,7 +305,11 @@ const BuyNow = () => {
       paymentMethod: 'creditCard',
     });
     setErrors({});
-    setShowPaymentModal(true);
+    
+    // Show payment modal after a brief delay to ensure smooth transition
+    setTimeout(() => {
+      setShowPaymentModal(true);
+    }, 100);
   };
 
   // Close payment modal
@@ -323,6 +435,14 @@ const BuyNow = () => {
 
   return (
     <div className="buynow-container">
+      {/* Debug info - Remove in production */}
+      <div style={{ background: '#f0f0f0', padding: '10px', margin: '10px', border: '1px solid #ccc' }}>
+        <h4>Debug Info:</h4>
+        <p>User ID: {userId || 'Not logged in'}</p>
+        <p>Logged in as: {userName || 'Not logged in'}</p>
+        <p>Token present: {token ? 'Yes' : 'No'}</p>
+      </div>
+      
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="modal-overlay">
@@ -570,146 +690,219 @@ const BuyNow = () => {
       {/* Car Details Modal */}
       {showDetailsModal && selectedCar && (
         <div className="modal-overlay" onClick={closeCarDetails}>
-          <div className="car-details-modal" onClick={e => e.stopPropagation()}>
-            <span className="close-modal" onClick={closeCarDetails}>&times;</span>
-            <h2>{selectedCar.brand.toUpperCase()} {selectedCar.carType}</h2>
-            
-            {/* Toggle between images and 3D model if available */}
-            {has3DModel(selectedCar) && (
-              <div className="view-toggle-buttons">
-                <button 
-                  className={`view-toggle-btn ${!showModelViewer ? 'active' : ''}`} 
-                  onClick={() => setShowModelViewer(false)}
-                >
-                  Photos
-                </button>
-                <button 
-                  className={`view-toggle-btn ${showModelViewer ? 'active' : ''}`} 
-                  onClick={() => setShowModelViewer(true)}
-                >
-                  3D Model
-                </button>
+        <div className="car-details-modal" onClick={e => e.stopPropagation()}>
+          <span className="close-modal" onClick={closeCarDetails}>&times;</span>
+          <h2>{selectedCar.brand.toUpperCase()} {selectedCar.carType}</h2>
+          
+          {/* Debug info - Remove in production */}
+          <div style={{ background: '#f0f0f0', padding: '10px', margin: '10px', border: '1px solid #ccc' }}>
+            <h4>Car Debug Info:</h4>
+            <p>Car ID: {selectedCar._id}</p>
+            <p>Owner ID: {selectedCar.owner}</p>
+            <p>User ID: {userId}</p>
+            <p>isOwner check: {isOwner(selectedCar) ? 'true' : 'false'}</p>
+          </div>
+          
+          {editMode ? (
+            /* Edit Form */
+            <div className="edit-form-container">
+              <h3>Edit Car Listing</h3>
+              <div className="form-group">
+                <label htmlFor="brand">Brand</label>
+                <input
+                  type="text"
+                  id="brand"
+                  name="brand"
+                  value={editFormData.brand}
+                  onChange={handleEditInputChange}
+                />
               </div>
-            )}
-            
-            {/* 3D Model Viewer */}
-            {showModelViewer && has3DModel(selectedCar) ? (
-              <div className="model-viewer-container">
-                <ThreeJSModelViewer modelUrl={`http://localhost:5000${selectedCar.model3d}`} />
-                <div className="model-viewer-instructions">
-                  <p>Click and drag to rotate | Scroll to zoom | Right-click to pan</p>
+              <div className="form-group">
+                <label htmlFor="carType">Car Type</label>
+                <input
+                  type="text"
+                  id="carType"
+                  name="carType"
+                  value={editFormData.carType}
+                  onChange={handleEditInputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="details">Details</label>
+                <textarea
+                  id="details"
+                  name="details"
+                  value={editFormData.details}
+                  onChange={handleEditInputChange}
+                  rows="5"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="email">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={editFormData.email}
+                  onChange={handleEditInputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="phone">Phone</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={editFormData.phone}
+                  onChange={handleEditInputChange}
+                />
+              </div>
+              <div className="edit-form-actions">
+                <button className="btn-outline" onClick={cancelEdit}>Cancel</button>
+                <button className="btn-primary" onClick={saveEditedCar}>Save Changes</button>
+              </div>
+            </div>
+          ) : (
+            /* Regular car details view */
+            <>
+              {/* Toggle between images and 3D model if available */}
+              {has3DModel(selectedCar) && (
+                <div className="view-toggle-buttons">
+                  <button 
+                    className={`view-toggle-btn ${!showModelViewer ? 'active' : ''}`} 
+                    onClick={() => setShowModelViewer(false)}
+                  >
+                    Photos
+                  </button>
+                  <button 
+                    className={`view-toggle-btn ${showModelViewer ? 'active' : ''}`} 
+                    onClick={() => setShowModelViewer(true)}
+                  >
+                    3D Model
+                  </button>
+                </div>
+              )}
+              
+              {/* 3D Model Viewer */}
+              {showModelViewer && has3DModel(selectedCar) ? (
+                <div className="model-viewer-container">
+                  <ThreeJSModelViewer modelUrl={`http://localhost:5000${selectedCar.model3d}`} />
+                  <div className="model-viewer-instructions">
+                    <p>Click and drag to rotate | Scroll to zoom | Right-click to pan</p>
+                  </div>
+                </div>
+              ) : (
+                /* Image carousel */
+                <div className="car-details-images">
+                  {selectedCar.images && selectedCar.images.length > 0 ? (
+                    <>
+                      <div className="car-image-carousel">
+                        <button 
+                          className="carousel-button prev" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigateImages('prev');
+                          }}
+                        >
+                          ‹
+                        </button>
+                      
+                        <div className="carousel-image-container">
+                          <img 
+                            src={`http://localhost:5000${selectedCar.images[activeImageIndex]}`} 
+                            alt={`${selectedCar.brand} ${activeImageIndex + 1}`} 
+                          />
+                          <div className="image-counter">
+                            {activeImageIndex + 1} / {selectedCar.images.length}
+                          </div>
+                        </div>
+                        
+                        <button 
+                          className="carousel-button next" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigateImages('next');
+                          }}
+                        >
+                          ›
+                        </button>
+                      </div>
+                      
+                      {/* Thumbnail navigation */}
+                      {selectedCar.images.length > 1 && (
+                        <div className="image-thumbnails">
+                          {selectedCar.images.map((image, index) => (
+                            <div 
+                              key={index} 
+                              className={`thumbnail ${index === activeImageIndex ? 'active' : ''}`}
+                              onClick={() => setActiveImageIndex(index)}
+                            >
+                              <img 
+                                src={`http://localhost:5000${image}`} 
+                                alt={`${selectedCar.brand} thumbnail ${index + 1}`} 
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="car-detail-image no-image">
+                      <span>No images available</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="car-details-info">
+                <div className="detail-section">
+                  <h3>Car Information</h3>
+                  <div className="detail-row">
+                    <span className="detail-label">Type:</span>
+                    <span className="detail-value">{selectedCar.carType}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Brand:</span>
+                    <span className="detail-value">{selectedCar.brand}</span>
+                  </div>
+                </div>
+                
+                <div className="detail-section">
+                  <h3>Full Description</h3>
+                  <p className="car-description">{selectedCar.details}</p>
+                </div>
+                
+                <div className="detail-section">
+                  <h3>Contact Information</h3>
+                  <div className="detail-row">
+                    <span className="detail-label">Seller:</span>
+                    <span className="detail-value">{selectedCar.ownerName}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Email:</span>
+                    <span className="detail-value">{selectedCar.email}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Phone:</span>
+                    <span className="detail-value">{selectedCar.phone}</span>
+                  </div>
                 </div>
               </div>
-            ) : (
-              /* Image carousel */
-              <div className="car-details-images">
-                {selectedCar.images && selectedCar.images.length > 0 ? (
+              
+              {/* Action buttons - for owner and buyers */}
+              <div className="car-details-actions">
+                {isOwner(selectedCar) ? (
                   <>
-                    <div className="car-image-carousel">
-                      <button 
-                        className="carousel-button prev" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigateImages('prev');
-                        }}
-                      >
-                        ‹
-                      </button>
-                      
-                      <div className="carousel-image-container">
-                        <img 
-                          src={`http://localhost:5000${selectedCar.images[activeImageIndex]}`} 
-                          alt={`${selectedCar.brand} ${activeImageIndex + 1}`} 
-                        />
-                        <div className="image-counter">
-                          {activeImageIndex + 1} / {selectedCar.images.length}
-                        </div>
-                      </div>
-                      
-                      <button 
-                        className="carousel-button next" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigateImages('next');
-                        }}
-                      >
-                        ›
-                      </button>
-                    </div>
-                    
-                    {/* Thumbnail navigation */}
-                    {selectedCar.images.length > 1 && (
-                      <div className="image-thumbnails">
-                        {selectedCar.images.map((image, index) => (
-                          <div 
-                            key={index} 
-                            className={`thumbnail ${index === activeImageIndex ? 'active' : ''}`}
-                            onClick={() => setActiveImageIndex(index)}
-                          >
-                            <img 
-                              src={`http://localhost:5000${image}`} 
-                              alt={`${selectedCar.brand} thumbnail ${index + 1}`} 
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <button className="btn-primary" onClick={() => handleEdit(selectedCar)}>Edit Listing</button>
+                    <button className="btn-danger" onClick={() => confirmDelete(selectedCar)}>Delete Listing</button>
                   </>
                 ) : (
-                  <div className="car-detail-image no-image">
-                    <span>No images available</span>
-                  </div>
+                  <button className="btn-purchase" onClick={openPaymentModal}>Buy Now</button>
                 )}
               </div>
-            )}
-            
-            <div className="car-details-info">
-              <div className="detail-section">
-                <h3>Car Information</h3>
-                <div className="detail-row">
-                  <span className="detail-label">Type:</span>
-                  <span className="detail-value">{selectedCar.carType}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Brand:</span>
-                  <span className="detail-value">{selectedCar.brand}</span>
-                </div>
-              </div>
-              
-              <div className="detail-section">
-                <h3>Full Description</h3>
-                <p className="car-description">{selectedCar.details}</p>
-              </div>
-              
-              <div className="detail-section">
-                <h3>Contact Information</h3>
-                <div className="detail-row">
-                  <span className="detail-label">Seller:</span>
-                  <span className="detail-value">{selectedCar.ownerName}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Email:</span>
-                  <span className="detail-value">{selectedCar.email}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Phone:</span>
-                  <span className="detail-value">{selectedCar.phone}</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Action buttons - for owner and buyers */}
-            <div className="car-details-actions">
-              {isOwner(selectedCar) ? (
-                <>
-                  <button className="btn-primary" onClick={() => handleEdit(selectedCar)}>Edit Listing</button>
-                  <button className="btn-danger" onClick={() => confirmDelete(selectedCar)}>Delete Listing</button>
-                </>
-              ) : (
-                <button className="btn-purchase" onClick={openPaymentModal}>Buy Now</button>
-              )}
-            </div>
-          </div>
+            </>
+          )}
+        </div>
         </div>
       )}
 
@@ -724,7 +917,7 @@ const BuyNow = () => {
             <span className={`hamburger ${mobileMenuOpen ? 'active' : ''}`}></span>
           </div>
           <ul className={`nav-links ${mobileMenuOpen ? 'active' : ''}`}>
-            <li><Link to="/">Home</Link></li>
+            <li><Link to="/homepage">Home</Link></li>
             <li><a href="#popular">Popular</a></li>
             <li><a href="#contact">Contact</a></li>
             <li><a href="#about">About</a></li>
@@ -804,11 +997,15 @@ const BuyNow = () => {
                       View details <span className="arrow">→</span>
                     </button>
                     
+                    {/* Show Buy Now button only for non-owners */}
                     {!isOwner(car) && (
-                      <button onClick={() => {
-                        setSelectedCar(car);
-                        openPaymentModal();
-                      }} className="buy-now-button">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation(); 
+                          setSelectedCar(car);
+                          openPaymentModal();
+                        }} 
+                        className="buy-now-button">
                         Buy Now
                       </button>
                     )}
@@ -817,8 +1014,24 @@ const BuyNow = () => {
                   {/* Owner-only actions */}
                   {isOwner(car) && (
                     <div className="owner-actions">
-                      <button className="edit-button" onClick={() => handleEdit(car)}>Edit</button>
-                      <button className="delete-button" onClick={() => confirmDelete(car)}>Delete</button>
+                      <button 
+                        className="edit-button" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(car);
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="delete-button" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmDelete(car);
+                        }}
+                      >
+                        Delete
+                      </button>
                     </div>
                   )}
                 </div>
