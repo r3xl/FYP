@@ -42,6 +42,9 @@ const BuyNow = () => {
     email: '',
     phone: ''
   });
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
   
   // Add state for user info
   const [userData, setUserData] = useState({
@@ -57,22 +60,12 @@ const BuyNow = () => {
     const name = localStorage.getItem('name');
     const token = localStorage.getItem('token');
     
-    console.log("Raw userId from localStorage:", userId); // Add this debug line
-    
     setUserData({
-      userId: userId, // Make sure this is the correct key
+      userId: userId,
       userName: name,
       token
     });
-    
-    // Debug log
-    console.log("Retrieved from localStorage:");
-    console.log("userId:", userId);
-    console.log("name:", name);
-    console.log("token:", Boolean(token));
   }, []);
-    
-
 
   // Function to handle logout
   const handleLogout = () => {
@@ -104,7 +97,6 @@ const BuyNow = () => {
         }
         
         const data = await response.json();
-        console.log("Fetched car listings:", data); // Debug: Log car listings
         setCarListings(data);
         setLoading(false);
       } catch (error) {
@@ -120,11 +112,6 @@ const BuyNow = () => {
   // Update the isOwner function to use userData.userId
   const isOwner = (listing) => {
     if (!listing || !listing.owner || !userData.userId) {
-      console.log("Missing data for ownership check:", { 
-        hasListing: !!listing, 
-        hasOwner: listing ? !!listing.owner : false, 
-        hasUserId: !!userData.userId 
-      });
       return false;
     }
     
@@ -132,21 +119,11 @@ const BuyNow = () => {
     const listingOwnerId = String(listing.owner);
     const currentUserId = String(userData.userId);
     
-    console.log("Comparing IDs:", { 
-      listingOwnerId, 
-      currentUserId, 
-      isMatch: listingOwnerId === currentUserId 
-    });
-    
     return listingOwnerId === currentUserId;
   };
 
   // Function to open car details
   const openCarDetails = (car) => {
-    console.log("Opening car details:", car);
-    console.log("Current user ID:", userData.userId);
-    console.log("Is user the owner?", isOwner(car));
-    
     setSelectedCar(car);
     setActiveImageIndex(0); // Reset image index when opening details
     setShowModelViewer(false); // Default to images view
@@ -160,8 +137,11 @@ const BuyNow = () => {
   };
 
   // Function to handle edit
-  const handleEdit = (car) => {
+  const handleEdit = (car, e) => {
+    if (e) e.stopPropagation(); // Prevent event bubbling
+    
     if (isOwner(car)) {
+      setSelectedCar(car);
       setEditingCar(car);
       setEditFormData({
         brand: car.brand,
@@ -195,7 +175,15 @@ const BuyNow = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${userData.token}`
         },
-        body: JSON.stringify(editFormData)
+        body: JSON.stringify({
+          firstName: editingCar.firstName,
+          lastName: editingCar.lastName,
+          topic: editFormData.carType,
+          description: editFormData.brand,
+          message: editFormData.details,
+          email: editFormData.email,
+          phone: editFormData.phone
+        })
       });
       
       if (!response.ok) {
@@ -205,24 +193,51 @@ const BuyNow = () => {
       // Get the updated car data from the response
       const updatedCar = await response.json();
       
+      // Create an updated car object with all the necessary fields
+      const updatedCarWithAllFields = {
+        ...editingCar,
+        brand: editFormData.brand,
+        carType: editFormData.carType,
+        details: editFormData.details,
+        email: editFormData.email,
+        phone: editFormData.phone
+      };
+      
       // Update the car in the listings array
       setCarListings(carListings.map(car => 
-        car._id === editingCar._id ? { ...car, ...updatedCar } : car
+        car._id === editingCar._id ? updatedCarWithAllFields : car
       ));
       
       // Update the selected car if it's the one being edited
       if (selectedCar && selectedCar._id === editingCar._id) {
-        setSelectedCar({ ...selectedCar, ...updatedCar });
+        setSelectedCar(updatedCarWithAllFields);
       }
       
       // Exit edit mode
       setEditMode(false);
       setEditingCar(null);
       
-      alert('Car listing updated successfully!');
+      // Show success notification
+      setNotificationMessage('Car listing updated successfully!');
+      setNotificationType('success');
+      setShowNotification(true);
+      
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        setShowNotification(false);
+      }, 3000);
     } catch (error) {
       console.error('Error updating car listing:', error);
-      alert('Failed to update car listing. Please try again.');
+      
+      // Show error notification
+      setNotificationMessage('Failed to update car listing. Please try again.');
+      setNotificationType('error');
+      setShowNotification(true);
+      
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        setShowNotification(false);
+      }, 3000);
     }
   };
 
@@ -453,14 +468,6 @@ const BuyNow = () => {
 
   return (
     <div className="buynow-container">
-      {/* Debug info - Remove in production */}
-      <div style={{ background: '#f0f0f0', padding: '10px', margin: '10px', border: '1px solid #ccc' }}>
-        <h4>Debug Info:</h4>
-        <p>User ID: {userData.userId || 'Not logged in'}</p>
-        <p>Logged in as: {userData.userName || 'Not logged in'}</p>
-        <p>Token present: {userData.token ? 'Yes' : 'No'}</p>
-      </div>
-      
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="modal-overlay">
@@ -711,15 +718,9 @@ const BuyNow = () => {
         <div className="car-details-modal" onClick={e => e.stopPropagation()}>
           <span className="close-modal" onClick={closeCarDetails}>&times;</span>
           <h2>{selectedCar.brand.toUpperCase()} {selectedCar.carType}</h2>
-          
-          {/* Debug info - Remove in production */}
-          <div style={{ background: '#f0f0f0', padding: '10px', margin: '10px', border: '1px solid #ccc' }}>
-            <h4>Car Debug Info:</h4>
-            <p>Car ID: {selectedCar._id}</p>
-            <p>Owner ID: {selectedCar.owner}</p>
-            <p>User ID: {userData.userId}</p>
-            <p>isOwner check: {isOwner(selectedCar) ? 'true' : 'false'}</p>
-          </div>
+
+
+      
           
           {editMode ? (
             /* Edit Form */
@@ -924,6 +925,14 @@ const BuyNow = () => {
         </div>
       )}
 
+      {/* Notification Popup */}
+      {showNotification && (
+        <div className={`notification-popup ${notificationType}`}>
+          <span className="notification-message">{notificationMessage}</span>
+          <button className="close-notification" onClick={() => setShowNotification(false)}>×</button>
+        </div>
+      )}
+
       {/* Header - Matched to Homepage */}
       <header className="header">
         <div className="logo">
@@ -1031,27 +1040,26 @@ const BuyNow = () => {
                   
                   {/* Owner-only actions */}
                   {isOwner(car) && (
-                    <div className="owner-actions">
-                      <button 
-                        className="edit-button" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(car);
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        className="delete-button" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          confirmDelete(car);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                  <div className="owner-actions">
+                    <button 
+                      className="edit-button" 
+                      onClick={(e) => {
+                        handleEdit(car, e);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      className="delete-button" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        confirmDelete(car);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
                 </div>
               </div>
             ))
