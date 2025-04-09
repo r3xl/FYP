@@ -43,24 +43,47 @@ const BuyNow = () => {
     phone: ''
   });
   
-  // Get user info from localStorage
-  const userName = localStorage.getItem('name');
-  const token = localStorage.getItem('token');
-  const userId = localStorage.getItem('userId');
+  // Add state for user info
+  const [userData, setUserData] = useState({
+    userId: '',
+    userName: '',
+    token: ''
+  });
 
+  // Get user info from localStorage in useEffect
   useEffect(() => {
-    // Log current localStorage values for debugging
-    console.log("Current localStorage values:");
-    console.log("userId:", localStorage.getItem('userId'));
-    console.log("token:", localStorage.getItem('token'));
-    console.log("name:", localStorage.getItem('name'));
+    // When retrieving from localStorage, make sure the key matches what was set during login
+    const userId = localStorage.getItem('userId');
+    const name = localStorage.getItem('name');
+    const token = localStorage.getItem('token');
+    
+    console.log("Raw userId from localStorage:", userId); // Add this debug line
+    
+    setUserData({
+      userId: userId, // Make sure this is the correct key
+      userName: name,
+      token
+    });
+    
+    // Debug log
+    console.log("Retrieved from localStorage:");
+    console.log("userId:", userId);
+    console.log("name:", name);
+    console.log("token:", Boolean(token));
   }, []);
+    
+
 
   // Function to handle logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('name');
     localStorage.removeItem('userId');
+    setUserData({
+      userId: '',
+      userName: '',
+      token: ''
+    });
     navigate('/login');
   };
 
@@ -94,39 +117,34 @@ const BuyNow = () => {
     fetchCarListings();
   }, []);
 
-  // Improved isOwner function with better debugging
+  // Update the isOwner function to use userData.userId
   const isOwner = (listing) => {
-    // Get userId directly from localStorage each time to ensure it's current
-    const currentUserId = localStorage.getItem('userId');
-    
-    console.log("Checking ownership:");
-    console.log("Current userId:", currentUserId);
-    console.log("Listing owner:", listing?.owner);
-    
-    if (!listing) {
-      console.log("No listing provided");
+    if (!listing || !listing.owner || !userData.userId) {
+      console.log("Missing data for ownership check:", { 
+        hasListing: !!listing, 
+        hasOwner: listing ? !!listing.owner : false, 
+        hasUserId: !!userData.userId 
+      });
       return false;
     }
     
-    if (!listing.owner) {
-      console.log("Listing has no owner field");
-      return false;
-    }
+    // Convert both to strings for comparison to avoid type mismatches
+    const listingOwnerId = String(listing.owner);
+    const currentUserId = String(userData.userId);
     
-    if (!currentUserId) {
-      console.log("No userId in localStorage");
-      return false;
-    }
+    console.log("Comparing IDs:", { 
+      listingOwnerId, 
+      currentUserId, 
+      isMatch: listingOwnerId === currentUserId 
+    });
     
-    const isMatch = String(listing.owner) === String(currentUserId);
-    console.log("Is owner match:", isMatch);
-    return isMatch;
+    return listingOwnerId === currentUserId;
   };
 
   // Function to open car details
   const openCarDetails = (car) => {
     console.log("Opening car details:", car);
-    console.log("Current user ID:", userId);
+    console.log("Current user ID:", userData.userId);
     console.log("Is user the owner?", isOwner(car));
     
     setSelectedCar(car);
@@ -168,14 +186,14 @@ const BuyNow = () => {
   };
 
   const saveEditedCar = async () => {
-    if (!editingCar || !token) return;
+    if (!editingCar || !userData.token) return;
     
     try {
       const response = await fetch(`http://localhost:5000/api/car-listings/${editingCar._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${userData.token}`
         },
         body: JSON.stringify(editFormData)
       });
@@ -231,13 +249,13 @@ const BuyNow = () => {
 
   // Function to handle delete
   const handleDelete = async () => {
-    if (!carToDelete || !token) return;
+    if (!carToDelete || !userData.token) return;
     
     try {
       const response = await fetch(`http://localhost:5000/api/car-listings/${carToDelete._id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${userData.token}`
         }
       });
       
@@ -438,9 +456,9 @@ const BuyNow = () => {
       {/* Debug info - Remove in production */}
       <div style={{ background: '#f0f0f0', padding: '10px', margin: '10px', border: '1px solid #ccc' }}>
         <h4>Debug Info:</h4>
-        <p>User ID: {userId || 'Not logged in'}</p>
-        <p>Logged in as: {userName || 'Not logged in'}</p>
-        <p>Token present: {token ? 'Yes' : 'No'}</p>
+        <p>User ID: {userData.userId || 'Not logged in'}</p>
+        <p>Logged in as: {userData.userName || 'Not logged in'}</p>
+        <p>Token present: {userData.token ? 'Yes' : 'No'}</p>
       </div>
       
       {/* Delete Confirmation Modal */}
@@ -699,7 +717,7 @@ const BuyNow = () => {
             <h4>Car Debug Info:</h4>
             <p>Car ID: {selectedCar._id}</p>
             <p>Owner ID: {selectedCar.owner}</p>
-            <p>User ID: {userId}</p>
+            <p>User ID: {userData.userId}</p>
             <p>isOwner check: {isOwner(selectedCar) ? 'true' : 'false'}</p>
           </div>
           
@@ -926,10 +944,10 @@ const BuyNow = () => {
           </ul>
         </nav>
         <div className="user-section">
-          {userName && (
+          {userData.userName && (
             <div className="user-profile">
               <span className="user-avatar">👤</span>
-              <span className="welcome-text">Welcome, {userName}</span>
+              <span className="welcome-text">Welcome, {userData.userName}</span>
             </div>
           )}
           <span className="logout-button" onClick={handleLogout}>Logout</span>

@@ -23,7 +23,8 @@ const LoginForm = () => {
       if (response.status === 200) {
         // Save JWT Token and User Name
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('name', response.data.name); // Save user's name
+        localStorage.setItem('name', response.data.name);
+        localStorage.setItem('userId', response.data.userId);
 
         navigate('/homepage'); // Redirect to homepage after successful login
       }
