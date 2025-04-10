@@ -67,6 +67,42 @@ const BuyNow = () => {
     });
   }, []);
 
+  function navigateToPopular() {
+    // Navigate programmatically
+    navigate('/homepage#popular');
+    // Manually scroll after a short delay
+    setTimeout(() => {
+      const element = document.getElementById('popular');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  }
+
+  function navigateToAbout() {
+    // Navigate programmatically
+    navigate('/homepage#about');
+    // Manually scroll after a short delay
+    setTimeout(() => {
+      const element = document.getElementById('about');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  }
+
+  function navigateToContact() {
+    // Navigate programmatically
+    navigate('/homepage#contact');
+    // Manually scroll after a short delay
+    setTimeout(() => {
+      const element = document.getElementById('contact');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  }
+
   // Function to handle logout
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -246,15 +282,24 @@ const BuyNow = () => {
     setEditingCar(null);
   };
 
-  // Function to show delete confirmation
-  const confirmDelete = (car) => {
-    if (isOwner(car)) {
-      setCarToDelete(car);
+// Function to confirm delete
+const confirmDelete = (car, e) => {
+  if (e) e.stopPropagation(); // Prevent event bubbling
+  
+  if (isOwner(car)) {
+    setCarToDelete(car);
+    
+    // Close the details modal first
+    setShowDetailsModal(false);
+    
+    // Show the delete confirmation after a brief delay
+    setTimeout(() => {
       setShowDeleteConfirm(true);
-    } else {
-      alert('You can only delete your own listings');
-    }
-  };
+    }, 100); // Small delay to ensure modal closes first
+  } else {
+    alert('You can only delete your own listings');
+  }
+};
   
   // Function to cancel delete
   const cancelDelete = () => {
@@ -468,19 +513,19 @@ const BuyNow = () => {
 
   return (
     <div className="buynow-container">
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="modal-overlay">
-          <div className="delete-modal">
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this listing? This action cannot be undone.</p>
-            <div className="delete-actions">
-              <button className="btn-outline" onClick={cancelDelete}>Cancel</button>
-              <button className="btn-danger" onClick={handleDelete}>Delete</button>
-            </div>
+    {/* Delete Confirmation Modal */}
+    {showDeleteConfirm && (
+      <div className="modal-overlay delete-confirm-overlay">
+        <div className="delete-modal">
+          <h3>Confirm Delete</h3>
+          <p>Are you sure you want to delete this listing? This action cannot be undone.</p>
+          <div className="delete-actions">
+            <button className="btn-outline" onClick={cancelDelete}>Cancel</button>
+            <button className="btn-danger" onClick={handleDelete}>Delete Listing</button>
           </div>
         </div>
-      )}
+      </div>
+    )}
       
       {/* Payment Modal */}
       {showPaymentModal && selectedCar && (
@@ -945,9 +990,9 @@ const BuyNow = () => {
           </div>
           <ul className={`nav-links ${mobileMenuOpen ? 'active' : ''}`}>
             <li><Link to="/homepage">Home</Link></li>
-            <li><a href="#popular">Popular</a></li>
-            <li><a href="#contact">Contact</a></li>
-            <li><a href="#about">About</a></li>
+            <li><a onClick={navigateToPopular}>Popular</a></li>
+            <li><a onClick={navigateToContact}>Contact</a></li>
+            <li><a onClick={navigateToAbout}>About</a></li>
             <li><Link to="/sell" className="btn-outline">Sell Now</Link></li>
             <li><Link to="/buy" className="btn-primary">Buy Now</Link></li>
           </ul>
@@ -1050,14 +1095,14 @@ const BuyNow = () => {
                       Edit
                     </button>
                     <button 
-                      className="delete-button" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        confirmDelete(car);
-                      }}
-                    >
-                      Delete
-                    </button>
+                    className="delete-button" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDelete(car, e);
+                    }}
+                  >
+                    Delete
+                  </button>
                   </div>
                 )}
                 </div>
@@ -1084,9 +1129,9 @@ const BuyNow = () => {
             <h3>Quick Links</h3>
             <ul className="footer-links">
               <li><Link to="/">Home</Link></li>
-              <li><a href="#popular">Popular</a></li>
-              <li><a href="#contact">Contact</a></li>
-              <li><a href="#about">About Us</a></li>
+              <li><a onClick={navigateToPopular}>Popular</a></li>
+              <li><a onClick={navigateToContact}>Contact</a></li>
+              <li><a onClick={navigateToAbout}>About</a></li>
               <li><Link to="/sell">Sell Now</Link></li>
               <li><Link to="/buy">Buy Now</Link></li>
             </ul>

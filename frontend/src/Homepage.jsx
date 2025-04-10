@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './Homepage.css';
 
 const Homepage = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [popularCars, setPopularCars] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   // Function to handle logout
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('name');
+    localStorage.removeItem('userId');
     navigate('/login');
   };
 
@@ -28,8 +31,37 @@ const Homepage = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // Fetch car listings on component mount
+  useEffect(() => {
+    const fetchPopularCars = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/car-listings');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch car listings');
+        }
+        
+        const data = await response.json();
+        // Get up to 4 cars to display in the popular section
+        setPopularCars(data.slice(0, 4));
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching car listings:', error);
+        setLoading(false);
+      }
+    };
+    
+    fetchPopularCars();
+  }, []);
+
   // Get user name from localStorage
   const userName = localStorage.getItem('name');
+
+  // Function to open car details in Buy page
+  const openCarDetails = (carId) => {
+    navigate(`/buy`, { state: { selectedCarId: carId } });
+  };
 
   return (
     <div className="homepage-container">
@@ -107,45 +139,43 @@ const Homepage = () => {
       <section className="popular-cars-section" id="popular">
         <div className="section-header">
           <h2>Popular Cars</h2>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          <p>Browse our most popular vehicles available for purchase</p>
         </div>
         <div className="car-grid">
-          <div className="car-card">
-            <div className="car-image">
-              <div className="placeholder-image"></div>
+          {loading ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Loading popular cars...</p>
             </div>
-            <div className="car-details">
-              <h3>Car 1</h3>
-              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim.</p>
+          ) : popularCars.length === 0 ? (
+            <div className="no-listings">
+              <h3>No car listings available</h3>
+              <p>Check back soon for new arrivals!</p>
             </div>
-          </div>
-          <div className="car-card">
-            <div className="car-image">
-              <div className="placeholder-image"></div>
-            </div>
-            <div className="car-details">
-              <h3>Car 2</h3>
-              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim.</p>
-            </div>
-          </div>
-          <div className="car-card">
-            <div className="car-image">
-              <div className="placeholder-image"></div>
-            </div>
-            <div className="car-details">
-              <h3>Car 3</h3>
-              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim.</p>
-            </div>
-          </div>
-          <div className="car-card">
-            <div className="car-image">
-              <div className="placeholder-image"></div>
-            </div>
-            <div className="car-details">
-              <h3>Car 4</h3>
-              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim.</p>
-            </div>
-          </div>
+          ) : (
+            popularCars.map((car) => (
+              <div className="car-card" key={car._id} onClick={() => openCarDetails(car._id)}>
+                <div className="car-image">
+                  {car.images && car.images.length > 0 ? (
+                    <img src={`http://localhost:5000${car.images[0]}`} alt={car.brand} />
+                  ) : (
+                    <div className="placeholder-image"></div>
+                  )}
+                  {car.model3d && (
+                    <div className="model3d-badge">3D</div>
+                  )}
+                </div>
+                <div className="car-details">
+                  <h3>{car.brand.toUpperCase()} {car.carType}</h3>
+                  <p>{car.details.substring(0, 80)}...</p>
+                  <div className="car-tags">
+                    <span className="tag">{car.carType}</span>
+                    <span className="tag">{car.brand}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
         <div className="view-all-container">
           <button onClick={navigateToBuyNow} className="btn-outline">View all</button>
@@ -156,7 +186,7 @@ const Homepage = () => {
       <section className="about-section" id="about">
         <div className="about-content">
           <h2>About Us</h2>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.</p>
+          <p>AutoVision is your trusted platform for buying and selling quality vehicles. We connect car enthusiasts with their dream cars and help sellers find the right buyers.</p>
           <div className="about-buttons">
             <button onClick={navigateToBuyNow} className="btn-primary">Buy Now</button>
             <button onClick={navigateToSellNow} className="btn-outline">Sell Now</button>
@@ -241,8 +271,8 @@ const Homepage = () => {
         <div className="footer-bottom">
           <p>&copy; 2025 AutoVision. All Rights Reserved.</p>
           <div className="footer-bottom-links">
-            <a href="/privacy">Privacy Policy</a>
-            <a href="/terms">Terms of Service</a>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms of Service</Link>
           </div>
         </div>
       </footer>

@@ -31,6 +31,42 @@ const SellPage = () => {
       navigate('/login');
     }
   }, [navigate]);
+
+  function navigateToPopular() {
+    // Navigate programmatically
+    navigate('/homepage#popular');
+    // Manually scroll after a short delay
+    setTimeout(() => {
+      const element = document.getElementById('popular');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  }
+
+  function navigateToContact() {
+    // Navigate programmatically
+    navigate('/homepage#contact');
+    // Manually scroll after a short delay
+    setTimeout(() => {
+      const element = document.getElementById('contact');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  }
+
+  function navigateToAbout() {
+    // Navigate programmatically
+    navigate('/homepage#about');
+    // Manually scroll after a short delay
+    setTimeout(() => {
+      const element = document.getElementById('about');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  }
   
   // Function to handle logout
   const handleLogout = () => {
@@ -378,10 +414,10 @@ const SellPage = () => {
           </div>
           <ul className={`nav-links ${mobileMenuOpen ? 'active' : ''}`}>
             <li><Link to="/homepage">Home</Link></li>
-            <li><Link to="/homepage">Popular</Link></li>
+            <li><a onClick={navigateToPopular}>Popular</a></li>
+            <li><a onClick={navigateToContact}>Contact</a></li>
+            <li><a onClick={navigateToAbout}>About</a></li>
             {/* <li><Link to="/sell">Sell</Link></li> */}
-            <li><Link to="/homepage#about">About</Link></li>
-            <li><Link to="/homepage#contact" className="btn-outline">Contact</Link></li>
             <li><Link to="/buy" className="btn-primary">Buy Now</Link></li>
           </ul>
         </nav>
@@ -741,11 +777,11 @@ const SellPage = () => {
             <h3>Quick Links</h3>
             <ul className="footer-links">
               <li><Link to="/">Home</Link></li>
-              <li><a href="#" onClick={(e) => { e.preventDefault(); navigateToHomeSection('popular'); }}>Popular</a></li>
+               <li><a onClick={navigateToPopular}>Popular</a></li>
+               <li><a onClick={navigateToContact}>Contact</a></li>
+               <li><a onClick={navigateToAbout}>About</a></li>
               <li><Link to="/sell">Sell</Link></li>
-              <li><Link to="/about">About</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-              <li><Link to="/buy">Buy Now</Link></li>
+              <li><Link to="/buy">Buy Now</Link></li> 
             </ul>
           </div>
           
