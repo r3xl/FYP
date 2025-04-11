@@ -38,6 +38,7 @@ const BuyNow = () => {
   const [editFormData, setEditFormData] = useState({
     brand: '',
     carType: '',
+    carName: '', 
     details: '',
     email: '',
     phone: ''
@@ -46,6 +47,29 @@ const BuyNow = () => {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
   const location = useLocation()
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filters, setFilters] = useState({
+    brands: [],
+    carTypes: [],
+    has3DModel: null // null means don't filter, true means only with 3D, false means only without 3D
+  });
+  const [sortOption, setSortOption] = useState('sort');
+  const [availableBrands, setAvailableBrands] = useState([]);
+  const [availableCarTypes, setAvailableCarTypes] = useState([]);
+
+  // All Brands and Car Types 
+  const allBrandsFromSellPage = [
+    "Toyota", "Honda", "Ford", "BMW", "Audi", "Mercedes-Benz", "Hyundai", "Nissan", "Chevrolet", "Volkswagen",
+    "Lexus", "Mazda", "Kia", "Jeep", "Subaru", "Tesla", "Volvo", "Porsche", "Land Rover", "Jaguar", "Acura", 
+    "Infiniti", "Cadillac", "Buick", "Mini", "Other"
+  ];
+
+  const allCarTypesFromSellPage = [
+    "Sedan", "SUV", "Sports Car", "Luxury", "Pickup Truck", "Hatchback", "Convertible", "Minivan", "Electric Vehicle", 
+    "Hybrid", "Compact", "Coupe", "Wagon", "Other"
+  ];
+
   
   // Add state for user info
   const [userData, setUserData] = useState({
@@ -53,6 +77,98 @@ const BuyNow = () => {
     userName: '',
     token: ''
   });
+
+  const handleSearchInputChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSortChange = (e) => {
+    setSortOption(e.target.value);
+  };
+
+  const getFilteredListings = () => {
+    // First filter by search term
+    let filtered = carListings;
+    if (searchTerm.trim() !== '') {
+      const searchTermLower = searchTerm.toLowerCase();
+      filtered = carListings.filter(car => 
+        car.brand.toLowerCase().includes(searchTermLower) ||
+        (car.carName && car.carName.toLowerCase().includes(searchTermLower))
+      );
+    }
+    
+    // Apply brand filters if any are selected
+    if (filters.brands.length > 0) {
+      filtered = filtered.filter(car => filters.brands.includes(car.brand));
+    }
+    
+    // Apply car type filters if any are selected
+    if (filters.carTypes.length > 0) {
+      filtered = filtered.filter(car => filters.carTypes.includes(car.carType));
+    }
+    
+    // Apply 3D model filter if selected
+    if (filters.has3DModel !== null) {
+      filtered = filtered.filter(car => (car.model3d != null) === filters.has3DModel);
+    }
+    
+    return filtered;
+  };
+
+  const toggleBrandFilter = (brand) => {
+    setFilters(prevFilters => {
+      const brandIndex = prevFilters.brands.indexOf(brand);
+      let updatedBrands;
+      
+      if (brandIndex === -1) {
+        // Add the brand to filters
+        updatedBrands = [...prevFilters.brands, brand];
+      } else {
+        // Remove the brand from filters
+        updatedBrands = prevFilters.brands.filter(b => b !== brand);
+      }
+      
+      return {
+        ...prevFilters,
+        brands: updatedBrands
+      };
+    });
+  };
+  
+  const toggleCarTypeFilter = (carType) => {
+    setFilters(prevFilters => {
+      const typeIndex = prevFilters.carTypes.indexOf(carType);
+      let updatedTypes;
+      
+      if (typeIndex === -1) {
+        // Add the car type to filters
+        updatedTypes = [...prevFilters.carTypes, carType];
+      } else {
+        // Remove the car type from filters
+        updatedTypes = prevFilters.carTypes.filter(t => t !== carType);
+      }
+      
+      return {
+        ...prevFilters,
+        carTypes: updatedTypes
+      };
+    });
+  };
+  
+  const toggle3DModelFilter = (value) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      has3DModel: prevFilters.has3DModel === value ? null : value
+    }));
+  };
+  
+  const clearAllFilters = () => {
+    setFilters({
+      brands: [],
+      carTypes: [],
+      has3DModel: null
+    });
+  };
 
   // Get user info from localStorage in useEffect
   useEffect(() => {
@@ -135,6 +251,9 @@ const BuyNow = () => {
         
         const data = await response.json();
         setCarListings(data);
+
+        setAvailableBrands(allBrandsFromSellPage);
+        setAvailableCarTypes(allCarTypesFromSellPage);        
         
         // Check if we have a selected car ID from navigation state
         if (location.state && location.state.selectedCarId) {
@@ -197,6 +316,7 @@ const BuyNow = () => {
       setEditFormData({
         brand: car.brand,
         carType: car.carType,
+        carName: car.carName || '', 
         details: car.details,
         email: car.email,
         phone: car.phone
@@ -231,6 +351,7 @@ const BuyNow = () => {
           lastName: editingCar.lastName,
           topic: editFormData.carType,
           description: editFormData.brand,
+          carName: editFormData.carName, // Add this line
           message: editFormData.details,
           email: editFormData.email,
           phone: editFormData.phone
@@ -249,6 +370,7 @@ const BuyNow = () => {
         ...editingCar,
         brand: editFormData.brand,
         carType: editFormData.carType,
+        carName: editFormData.carName, // Add this line
         details: editFormData.details,
         email: editFormData.email,
         phone: editFormData.phone
@@ -777,7 +899,7 @@ const confirmDelete = (car, e) => {
         <div className="modal-overlay" onClick={closeCarDetails}>
         <div className="car-details-modal" onClick={e => e.stopPropagation()}>
           <span className="close-modal" onClick={closeCarDetails}>&times;</span>
-          <h2>{selectedCar.brand.toUpperCase()} {selectedCar.carType}</h2>
+          <h2>{selectedCar.brand.toUpperCase()} {selectedCar.carName || ''}</h2>
 
 
       
@@ -806,6 +928,18 @@ const confirmDelete = (car, e) => {
                   onChange={handleEditInputChange}
                 />
               </div>
+
+              <div className="form-group">
+                <label htmlFor="carName">Car Name</label>
+                <input
+                  type="text"
+                  id="carName"
+                  name="carName"
+                  value={editFormData.carName}
+                  onChange={handleEditInputChange}
+                />
+              </div>
+
               <div className="form-group">
                 <label htmlFor="details">Details</label>
                 <textarea
@@ -941,6 +1075,10 @@ const confirmDelete = (car, e) => {
                     <span className="detail-value">{selectedCar.carType}</span>
                   </div>
                   <div className="detail-row">
+                  <span className="detail-label">Model:</span>
+                  <span className="detail-value">{selectedCar.carName || 'Not specified'}</span>
+                </div>
+                  <div className="detail-row">
                     <span className="detail-label">Brand:</span>
                     <span className="detail-value">{selectedCar.brand}</span>
                   </div>
@@ -1023,109 +1161,230 @@ const confirmDelete = (car, e) => {
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="buynow-main">
-        <section className="buynow-hero">
-          <h1>Buy Cars NOW</h1>
-          <p>Find your dream car today with our extensive collection of quality vehicles.</p>
-        </section>
-
-        <section className="buynow-cars-grid">
-          {loading ? (
-            <div className="loading-container">
-              <div className="loading-spinner"></div>
-              <p>Loading car listings...</p>
-            </div>
-          ) : error ? (
-            <div className="error-container">
-              <p className="error-message">{error}</p>
-              <button className="btn-primary" onClick={() => window.location.reload()}>
-                Retry
-              </button>
-            </div>
-          ) : carListings.length === 0 ? (
-            <div className="no-listings">
-              <h3>No car listings available</h3>
-              <p>Be the first to sell your car!</p>
-              <Link to="/sell" className="btn-primary">Sell Your Car</Link>
-            </div>
-          ) : (
-            carListings.map((car) => (
-              <div className="car-item" key={car._id}>
-                <div 
-                  className="car-image" 
-                  onClick={() => openCarDetails(car)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {car.images && car.images.length > 0 ? (
-                    <img src={`http://localhost:5000${car.images[0]}`} alt={car.brand} />
-                  ) : (
-                    <div className="placeholder-image"></div>
-                  )}
-                  {isOwner(car) && (
-                    <div className="owner-badge">Your Listing</div>
-                  )}
-                  {car.model3d && (
-                    <div className="model3d-badge">3D</div>
-                  )}
-                </div>
-                <div className="car-details">
-                  <h3>{car.brand.toUpperCase()} {car.carType}</h3>
-                  <p>{car.details.substring(0, 100)}...</p>
-                  <div className="car-tags">
-                    <span className="tag">{car.carType}</span>
-                    <span className="tag">{car.brand}</span>
-                    {car.model3d && (
-                      <span className="tag feature-tag">3D Model</span>
-                    )}
-                  </div>
-                  <div className="car-actions">
-                    <button onClick={() => openCarDetails(car)} className="view-project">
-                      View details <span className="arrow">→</span>
-                    </button>
-                    
-                    {/* Show Buy Now button only for non-owners */}
-                    {!isOwner(car) && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation(); 
-                          setSelectedCar(car);
-                          openPaymentModal();
-                        }} 
-                        className="buy-now-button">
-                        Buy Now
+                  {/* Search and Filter Bar */}
+                  <div className="search-sort-container">
+                    <div className="search-bar">
+                      <input
+                        type="text"
+                        placeholder="Car brand or name..."
+                        value={searchTerm}
+                        onChange={handleSearchInputChange}
+                      />
+                      <button className="search-button">
+                        <span role="img" aria-label="search">🔍</span>
                       </button>
-                    )}
-                  </div>
-                  
-                  {/* Owner-only actions */}
-                  {isOwner(car) && (
-                  <div className="owner-actions">
+                    </div>
                     <button 
-                      className="edit-button" 
-                      onClick={(e) => {
-                        handleEdit(car, e);
-                      }}
+                      className="filter-button" 
+                      onClick={() => setShowFilterModal(true)}
                     >
-                      Edit
+                      Filter Options
+                      {(filters.brands.length > 0 || filters.carTypes.length > 0 || filters.has3DModel !== null) && (
+                        <span className="filter-badge"></span>
+                      )}
                     </button>
-                    <button 
-                    className="delete-button" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      confirmDelete(car, e);
-                    }}
-                  >
-                    Delete
-                  </button>
                   </div>
-                )}
-                </div>
-              </div>
-            ))
-          )}
-        </section>
-      </main>
+
+                  {/* Filter Modal */}
+                  {showFilterModal && (
+                    <div className="modal-overlay" onClick={() => setShowFilterModal(false)}>
+                      <div className="filter-modal" onClick={e => e.stopPropagation()}>
+                        <div className="filter-modal-header">
+                          <h3>Filter Options</h3>
+                          <span className="close-modal" onClick={() => setShowFilterModal(false)}>&times;</span>
+                        </div>
+                        
+                        <div className="filter-section">
+                          <h4>Brands</h4>
+                          <div className="filter-options">
+                            {availableBrands.map(brand => (
+                              <label key={brand} className="filter-option">
+                                <input 
+                                  type="checkbox" 
+                                  checked={filters.brands.includes(brand)}
+                                  onChange={() => toggleBrandFilter(brand)}
+                                />
+                                <span className="filter-label">{brand}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="filter-section">
+                          <h4>Car Types</h4>
+                          <div className="filter-options">
+                            {availableCarTypes.map(carType => (
+                              <label key={carType} className="filter-option">
+                                <input 
+                                  type="checkbox" 
+                                  checked={filters.carTypes.includes(carType)}
+                                  onChange={() => toggleCarTypeFilter(carType)}
+                                />
+                                <span className="filter-label">{carType}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="filter-section">
+                          <h4>3D Model</h4>
+                          <div className="filter-options">
+                            <label className="filter-option">
+                              <input 
+                                type="radio" 
+                                name="3dFilter"
+                                checked={filters.has3DModel === true}
+                                onChange={() => toggle3DModelFilter(true)}
+                              />
+                              <span className="filter-label">With 3D Model</span>
+                            </label>
+                            <label className="filter-option">
+                              <input 
+                                type="radio" 
+                                name="3dFilter"
+                                checked={filters.has3DModel === false}
+                                onChange={() => toggle3DModelFilter(false)}
+                              />
+                              <span className="filter-label">Without 3D Model</span>
+                            </label>
+                            <label className="filter-option">
+                              <input 
+                                type="radio" 
+                                name="3dFilter"
+                                checked={filters.has3DModel === null}
+                                onChange={() => toggle3DModelFilter(null)}
+                              />
+                              <span className="filter-label">Show All</span>
+                            </label>
+                          </div>
+                        </div>
+                        
+                        <div className="filter-actions">
+                          <button className="btn-outline" onClick={clearAllFilters}>Clear All</button>
+                          <button className="btn-primary" onClick={() => setShowFilterModal(false)}>Apply Filters</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+              {/* Main content */}
+              <main className="buynow-main">
+                <section className="buynow-hero">
+                  <h1>Buy Cars NOW</h1>
+                  <p>Find your dream car today with our extensive collection of quality vehicles.</p>
+                </section>
+
+                <section className="buynow-cars-grid">
+                  {loading ? (
+                    <div className="loading-container">
+                      <div className="loading-spinner"></div>
+                      <p>Loading car listings...</p>
+                    </div>
+                  ) : error ? (
+                    <div className="error-container">
+                      <p className="error-message">{error}</p>
+                      <button className="btn-primary" onClick={() => window.location.reload()}>
+                        Retry
+                      </button>
+                    </div>
+                  ) : getFilteredListings().length === 0 ? (
+                    <div className="no-listings">
+                      {searchTerm ? (
+                        <>
+                          <h3>No cars match your search</h3>
+                          <p>Try different keywords or clear your search</p>
+                          <button className="btn-primary" onClick={() => setSearchTerm('')}>Clear Search</button>
+                        </>
+                      ) : (
+                        <>
+                          <h3>No car listings available</h3>
+                          <p>Be the first to sell your car!</p>
+                          <Link to="/sell" className="btn-primary">Sell Your Car</Link>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    getFilteredListings().map((car) => (
+                      <div className="car-item" key={car._id}>
+                        <div 
+                          className="car-image" 
+                          onClick={() => openCarDetails(car)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {car.images && car.images.length > 0 ? (
+                            <img src={`http://localhost:5000${car.images[0]}`} alt={car.brand} />
+                          ) : (
+                            <div className="placeholder-image"></div>
+                          )}
+                          {isOwner(car) && (
+                            <div className="owner-badge">Your Listing</div>
+                          )}
+                          {car.model3d && (
+                            <div className="model3d-badge">3D</div>
+                          )}
+                        </div>
+
+                        <div className="car-details">
+                          <h3>{car.brand.toUpperCase()} {car.carName || ''}</h3>
+                          <p>{car.details.substring(0, 100)}...</p>
+                          <div className="car-tags">
+                            <span className="tag">{car.carType}</span>
+                            <span className="tag">{car.brand}</span>
+                            {car.carName && <span className="tag">{car.carName}</span>}
+                            {car.model3d && (
+                              <span className="tag feature-tag">3D Model</span>
+                            )}
+                          </div>
+
+                          <div className="car-actions">
+                            <button onClick={() => openCarDetails(car)} className="view-project">
+                              View details <span className="arrow">→</span>
+                            </button>
+
+                            {/* Show Buy Now button only for non-owners */}
+                            {!isOwner(car) && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation(); 
+                                  setSelectedCar(car);
+                                  openPaymentModal();
+                                }} 
+                                className="buy-now-button"
+                              >
+                                Buy Now
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Owner-only actions */}
+                          {isOwner(car) && (
+                            <div className="owner-actions">
+                              <button 
+                                className="edit-button" 
+                                onClick={(e) => {
+                                  handleEdit(car, e);
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button 
+                                className="delete-button" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  confirmDelete(car, e);
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </section>
+              </main>
+
 
       {/* Footer - Matched to Homepage */}
       <footer className="footer">

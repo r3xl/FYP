@@ -11,7 +11,8 @@ const SellPage = () => {
     email: '',
     phone: '',
     topic: '',
-    description: '',
+    carName: '',
+    description: '', // This will now store the selected car brand from dropdown
     message: '',
     terms: false,
     images: [],
@@ -105,14 +106,6 @@ const SellPage = () => {
     });
   };
 
-  // Handle radio button change
-  const handleRadioChange = (e) => {
-    setFormData({
-      ...formData,
-      description: e.target.value
-    });
-  };
-
   // Handle image upload
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -151,26 +144,27 @@ const SellPage = () => {
     });
   };
   
-  // Validate form
-  const validateForm = () => {
-    const newErrors = {};
-    
-    // Check required fields
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.topic) newErrors.topic = 'Please select a car type';
-    if (!formData.description) newErrors.description = 'Please select a car brand';
-    if (!formData.message.trim()) newErrors.message = 'Vehicle details are required';
-    if (!formData.terms) newErrors.terms = 'You must accept the terms';
-    
-    // Make images mandatory instead of 3D model
-    if (formData.images.length === 0) newErrors.images = 'At least one image is required';
-    
-    return newErrors;
-  };
+// Validate form
+const validateForm = () => {
+  const newErrors = {};
+  
+  // Check required fields
+  if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+  if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+  if (!formData.email.trim()) newErrors.email = 'Email is required';
+  else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+  if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+  if (!formData.topic) newErrors.topic = 'Please select a car type';
+  if (!formData.description) newErrors.description = 'Please select a car brand';
+  if (!formData.carName.trim()) newErrors.carName = 'Car name is required';
+  if (!formData.message.trim()) newErrors.message = 'Vehicle details are required';
+  if (!formData.terms) newErrors.terms = 'You must accept the terms';
+  
+  // Make images mandatory instead of 3D model
+  if (formData.images.length === 0) newErrors.images = 'At least one image is required';
+  
+  return newErrors;
+};
 
   // Open Terms Modal
   const openTermsModal = (e) => {
@@ -209,6 +203,7 @@ const SellPage = () => {
       phone: '',
       topic: '',
       description: '',
+      carName: '',
       message: '',
       terms: false,
       images: [],
@@ -250,6 +245,7 @@ const SellPage = () => {
     submissionData.append('email', formData.email);
     submissionData.append('phone', formData.phone);
     submissionData.append('topic', formData.topic);
+    submissionData.append('carName', formData.carName);
     submissionData.append('description', formData.description);
     submissionData.append('message', formData.message);
     
@@ -417,7 +413,6 @@ const SellPage = () => {
             <li><a onClick={navigateToPopular}>Popular</a></li>
             <li><a onClick={navigateToContact}>Contact</a></li>
             <li><a onClick={navigateToAbout}>About</a></li>
-            {/* <li><Link to="/sell">Sell</Link></li> */}
             <li><Link to="/buy" className="btn-primary">Buy Now</Link></li>
           </ul>
         </nav>
@@ -516,125 +511,57 @@ const SellPage = () => {
               {errors.topic && <span className="error-message">{errors.topic}</span>}
             </div>
             
+            {/* CHANGED: Car Brand dropdown instead of radio buttons */}
             <div className="form-group">
-              <label>Car Brand</label>
-              <div className={`radio-group ${errors.description ? 'input-error' : ''}`}>
-                <div className="radio-column">
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="toyota" 
-                      name="description" 
-                      value="toyota" 
-                      checked={formData.description === 'toyota'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="toyota">Toyota</label>
-                  </div>
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="honda" 
-                      name="description" 
-                      value="honda" 
-                      checked={formData.description === 'honda'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="honda">Honda</label>
-                  </div>
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="ford" 
-                      name="description" 
-                      value="ford" 
-                      checked={formData.description === 'ford'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="ford">Ford</label>
-                  </div>
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="bmw" 
-                      name="description" 
-                      value="bmw" 
-                      checked={formData.description === 'bmw'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="bmw">BMW</label>
-                  </div>
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="audi" 
-                      name="description" 
-                      value="audi" 
-                      checked={formData.description === 'audi'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="audi">Audi</label>
-                  </div>
-                </div>
-                <div className="radio-column">
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="mercedes" 
-                      name="description" 
-                      value="mercedes" 
-                      checked={formData.description === 'mercedes'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="mercedes">Mercedes-Benz</label>
-                  </div>
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="hyundai" 
-                      name="description" 
-                      value="hyundai" 
-                      checked={formData.description === 'hyundai'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="hyundai">Hyundai</label>
-                  </div>
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="nissan" 
-                      name="description" 
-                      value="nissan" 
-                      checked={formData.description === 'nissan'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="nissan">Nissan</label>
-                  </div>
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="chevrolet" 
-                      name="description" 
-                      value="chevrolet" 
-                      checked={formData.description === 'chevrolet'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="chevrolet">Chevrolet</label>
-                  </div>
-                  <div className="radio-option">
-                    <input 
-                      type="radio" 
-                      id="other_brand" 
-                      name="description" 
-                      value="other_brand" 
-                      checked={formData.description === 'other_brand'}
-                      onChange={handleRadioChange}
-                    />
-                    <label htmlFor="other_brand">Other</label>
-                  </div>
-                </div>
-              </div>
+              <label htmlFor="description">Car Brand</label>
+              <select 
+                id="description" 
+                className={`form-select ${errors.description ? 'input-error' : ''}`}
+                value={formData.description}
+                onChange={handleInputChange}
+              >
+                <option value="" disabled>Select a brand...</option>
+                <option value="toyota">Toyota</option>
+                <option value="honda">Honda</option>
+                <option value="ford">Ford</option>
+                <option value="bmw">BMW</option>
+                <option value="audi">Audi</option>
+                <option value="mercedes">Mercedes-Benz</option>
+                <option value="hyundai">Hyundai</option>
+                <option value="nissan">Nissan</option>
+                <option value="chevrolet">Chevrolet</option>
+                <option value="volkswagen">Volkswagen</option>
+                <option value="lexus">Lexus</option>
+                <option value="mazda">Mazda</option>
+                <option value="kia">Kia</option>
+                <option value="jeep">Jeep</option>
+                <option value="subaru">Subaru</option>
+                <option value="tesla">Tesla</option>
+                <option value="volvo">Volvo</option>
+                <option value="porsche">Porsche</option>
+                <option value="land_rover">Land Rover</option>
+                <option value="jaguar">Jaguar</option>
+                <option value="acura">Acura</option>
+                <option value="infiniti">Infiniti</option>
+                <option value="cadillac">Cadillac</option>
+                <option value="buick">Buick</option>
+                <option value="mini">Mini</option>
+                <option value="other_brand">Other</option>
+              </select>
               {errors.description && <span className="error-message">{errors.description}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="carName">Car Name</label>
+              <input 
+                type="text" 
+                id="carName" 
+                className={`form-input ${errors.carName ? 'input-error' : ''}`}
+                placeholder="Enter car model name (e.g., Civic, Corolla, F-150)"
+                value={formData.carName}
+                onChange={handleInputChange}
+              />
+              {errors.carName && <span className="error-message">{errors.carName}</span>}
             </div>
             
             <div className="form-group">

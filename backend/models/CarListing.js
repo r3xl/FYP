@@ -14,9 +14,10 @@ const CarListingSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   carType: { type: String, required: true },
   brand: { type: String, required: true },
+  carName: { type: String }, 
   details: { type: String, required: true },
-  images: [{ type: String }], // Store image paths
-  model3d: { type: String }, // Store 3D model path if any
+  images: [{ type: String }], 
+  model3d: { type: String }, 
   createdAt: { type: Date, default: Date.now }
 });
 

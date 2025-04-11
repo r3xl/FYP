@@ -35,6 +35,7 @@ export const createCarListing = async (req, res) => {
       phone: req.body.phone,
       carType: req.body.topic,
       brand: req.body.description,
+      carName: req.body.carName, 
       details: req.body.message,
       images: imagePaths,
       model3d: model3dPath
@@ -103,6 +104,7 @@ export const updateCarListing = async (req, res) => {
       phone: req.body.phone || listing.phone,
       carType: req.body.topic || listing.carType,
       brand: req.body.description || listing.brand,
+      carName: req.body.carName || listing.carName, // Add this line
       details: req.body.message || listing.details,
     };
     
@@ -111,6 +113,7 @@ export const updateCarListing = async (req, res) => {
       updatedData,
       { new: true }
     );
+    
     
     res.json({ 
       success: true,
