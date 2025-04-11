@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import './BuyNow.css';
 import ThreeJSModelViewer from './ThreeJSModelViewer';
 
@@ -45,6 +45,7 @@ const BuyNow = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
+  const location = useLocation()
   
   // Add state for user info
   const [userData, setUserData] = useState({
@@ -134,6 +135,20 @@ const BuyNow = () => {
         
         const data = await response.json();
         setCarListings(data);
+        
+        // Check if we have a selected car ID from navigation state
+        if (location.state && location.state.selectedCarId) {
+          // Find the car with the matching ID
+          const selectedCar = data.find(car => car._id === location.state.selectedCarId);
+          if (selectedCar) {
+            // Open the details modal for this car
+            setSelectedCar(selectedCar);
+            setActiveImageIndex(0);
+            setShowModelViewer(false);
+            setShowDetailsModal(true);
+          }
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching car listings:', error);
@@ -143,7 +158,7 @@ const BuyNow = () => {
     };
     
     fetchCarListings();
-  }, []);
+  }, [location.state]); 
 
   // Update the isOwner function to use userData.userId
   const isOwner = (listing) => {
