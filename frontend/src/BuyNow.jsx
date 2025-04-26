@@ -53,8 +53,7 @@ const BuyNow = () => {
     brands: [],
     carTypes: [],
     has3DModel: null // null means don't filter, true means only with 3D, false means only without 3D
-  });
-  const [sortOption, setSortOption] = useState('sort');
+  }); 
   const [availableBrands, setAvailableBrands] = useState([]);
   const [availableCarTypes, setAvailableCarTypes] = useState([]);
 
@@ -66,7 +65,7 @@ const BuyNow = () => {
   ];
 
   const allCarTypesFromSellPage = [
-    "Sedan", "SUV", "Sports Car", "Luxury", "Pickup Truck", "Hatchback", "Convertible", "Minivan", "Electric Vehicle", 
+    "Sedan", "SUV", "Sports", "Luxury", "Pickup Truck", "Hatchback", "Convertible", "Minivan", "Electric", 
     "Hybrid", "Compact", "Coupe", "Wagon", "Other"
   ];
 
@@ -82,39 +81,46 @@ const BuyNow = () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleSortChange = (e) => {
-    setSortOption(e.target.value);
-  };
+// Update the getFilteredListings function to apply both filtering and sorting
+const getFilteredListings = () => {
+  let filtered = [...carListings];
 
-  const getFilteredListings = () => {
-    // First filter by search term
-    let filtered = carListings;
-    if (searchTerm.trim() !== '') {
-      const searchTermLower = searchTerm.toLowerCase();
-      filtered = carListings.filter(car => 
-        car.brand.toLowerCase().includes(searchTermLower) ||
-        (car.carName && car.carName.toLowerCase().includes(searchTermLower))
-      );
-    }
-    
-    // Apply brand filters if any are selected
-    if (filters.brands.length > 0) {
-      filtered = filtered.filter(car => filters.brands.includes(car.brand));
-    }
-    
-    // Apply car type filters if any are selected
-    if (filters.carTypes.length > 0) {
-      filtered = filtered.filter(car => filters.carTypes.includes(car.carType));
-    }
-    
-    // Apply 3D model filter if selected
-    if (filters.has3DModel !== null) {
-      filtered = filtered.filter(car => (car.model3d != null) === filters.has3DModel);
-    }
-    
-    return filtered;
-  };
+  // Apply search term
+  if (searchTerm.trim() !== '') {
+    const searchTermLower = searchTerm.toLowerCase();
+    filtered = filtered.filter(car =>
+      car.brand.toLowerCase().includes(searchTermLower) ||
+      (car.carName && car.carName.toLowerCase().includes(searchTermLower)) ||
+      car.carType.toLowerCase().includes(searchTermLower)
+    );
+  }
 
+  // Fix brand filtering
+  if (filters.brands.length > 0) {
+    filtered = filtered.filter(car => 
+      filters.brands.some(selectedBrand => selectedBrand.toLowerCase() === car.brand.toLowerCase())
+    );
+  }
+
+  // Fix carType filtering
+  if (filters.carTypes.length > 0) {
+    filtered = filtered.filter(car => 
+      filters.carTypes.some(selectedType => selectedType.toLowerCase() === car.carType.toLowerCase())
+    );
+  }
+
+  // 3D model filter
+  if (filters.has3DModel !== null) {
+    filtered = filtered.filter(car => (car.model3d != null) === filters.has3DModel);
+  }
+
+  // Always sort newest first
+  filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  return filtered;
+};
+
+  
   const toggleBrandFilter = (brand) => {
     setFilters(prevFilters => {
       const brandIndex = prevFilters.brands.indexOf(brand);
@@ -244,30 +250,13 @@ const BuyNow = () => {
       try {
         setLoading(true);
         const response = await fetch('http://localhost:5000/api/car-listings');
-        
         if (!response.ok) {
           throw new Error('Failed to fetch car listings');
         }
-        
         const data = await response.json();
         setCarListings(data);
-
         setAvailableBrands(allBrandsFromSellPage);
-        setAvailableCarTypes(allCarTypesFromSellPage);        
-        
-        // Check if we have a selected car ID from navigation state
-        if (location.state && location.state.selectedCarId) {
-          // Find the car with the matching ID
-          const selectedCar = data.find(car => car._id === location.state.selectedCarId);
-          if (selectedCar) {
-            // Open the details modal for this car
-            setSelectedCar(selectedCar);
-            setActiveImageIndex(0);
-            setShowModelViewer(false);
-            setShowDetailsModal(true);
-          }
-        }
-        
+        setAvailableCarTypes(allCarTypesFromSellPage);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching car listings:', error);
@@ -275,9 +264,49 @@ const BuyNow = () => {
         setLoading(false);
       }
     };
-    
+  
     fetchCarListings();
-  }, [location.state]); 
+  }, []); // removed [location.state]
+  
+
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      refreshUserData();
+    }, 10 * 60 * 1000); // Refresh every 10 minutes
+  
+    return () => clearInterval(refreshInterval); // Cleanup
+  }, []);
+
+  const refreshUserData = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+  
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/refresh', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+  
+      if (!response.ok) {
+        console.log('Failed to refresh session');
+        handleLogout();
+        return;
+      }
+  
+      const data = await response.json();
+  
+      // Update user data or token if needed
+      localStorage.setItem('token', data.newToken);
+      setUserData(prev => ({
+        ...prev,
+        token: data.newToken
+      }));
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    }
+  };  
 
   // Update the isOwner function to use userData.userId
   const isOwner = (listing) => {
@@ -338,6 +367,7 @@ const BuyNow = () => {
 
   const saveEditedCar = async () => {
     if (!editingCar || !userData.token) return;
+    console.log('Editing car token:', userData.token);
     
     try {
       const response = await fetch(`http://localhost:5000/api/car-listings/${editingCar._id}`, {

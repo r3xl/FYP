@@ -1,4 +1,3 @@
-// models/CarListing.js
 import mongoose from 'mongoose';
 
 const CarListingSchema = new mongoose.Schema({

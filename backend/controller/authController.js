@@ -21,10 +21,11 @@ export const registerUser = async (req, res) => {
 
     // Generate token for immediate login
     const token = jwt.sign(
-      { userId: newUser._id },
+      { userId: user._id },
       process.env.JWT_SECRET || 'default_secret',
       { expiresIn: '1h' }
     );
+    
 
     res.status(201).json({ 
       message: 'User registered successfully',

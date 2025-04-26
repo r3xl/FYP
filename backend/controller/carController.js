@@ -1,4 +1,3 @@
-// controller/carController.js
 import CarListing from '../models/CarListing.js';
 import fs from 'fs';
 import path from 'path';
@@ -72,15 +71,22 @@ export const getAllCarListings = async (req, res) => {
 export const getCarListing = async (req, res) => {
   try {
     const listing = await CarListing.findById(req.params.id);
+
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
     }
-    res.json(listing);
+
+    res.status(200).json({
+      success: true,
+      message: 'Single car listing fetched successfully',
+      listing,
+    });
   } catch (error) {
     console.error('Error fetching car listing:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error fetching listing: ' + error.message });
   }
 };
+
 
 // Update a car listing
 export const updateCarListing = async (req, res) => {
