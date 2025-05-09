@@ -11,22 +11,48 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!email || !password) {
       setError('Please fill in all fields.');
       return;
     }
-
+  
+    // Admin login check
+    if (email === 'autovision@gmail.com' && password === 'autovision123') {
+      // Generate a proper admin JWT token
+      const adminTokenPayload = {
+        userId: 'admin-user-id', // You could use a real admin ID or this placeholder
+        role: 'admin',
+        name: 'Admin',
+        exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour expiration
+      };
+      
+      // Simple base64 encoding (not secure for production, just for demo)
+      const base64Encode = (obj) => {
+        return btoa(JSON.stringify(obj)).replace(/=/g, '');
+      };
+      
+      // Create a simple JWT-like token (header.payload.signature)
+      const adminToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${base64Encode(adminTokenPayload)}.admin-signature`;
+      
+      localStorage.setItem('adminAuthenticated', 'true');
+      localStorage.setItem('adminToken', adminToken);
+      localStorage.setItem('name', 'Admin');
+      localStorage.setItem('userId', 'admin-user-id');
+      
+      navigate('/admin');
+      return;
+    }
+  
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
-
+  
       if (response.status === 200) {
-        // Save JWT Token and User Name
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('name', response.data.name);
         localStorage.setItem('userId', response.data.userId);
-
-        navigate('/homepage'); // Redirect to homepage after successful login
+  
+        navigate('/homepage');
       }
     } catch (error) {
       if (error.response) {
@@ -36,6 +62,7 @@ const LoginForm = () => {
       }
     }
   };
+  
 
   return (
     <div className="homepage-container auth-container">

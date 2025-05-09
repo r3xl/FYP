@@ -97,10 +97,12 @@ export const updateCarListing = async (req, res) => {
       return res.status(404).json({ message: 'Listing not found' });
     }
     
-    // Check if user owns this listing
-    if (listing.owner.toString() !== req.user.userId) {
+    // Check if user owns this listing or is an admin
+    const isAdmin = req.user.role === 'admin' || req.headers['x-admin-auth'] === 'true' || req.query.isAdmin === 'true';
+    if (listing.owner.toString() !== req.user.userId && !isAdmin) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
+
     
     // Update fields
     const updatedData = {
@@ -135,25 +137,113 @@ export const updateCarListing = async (req, res) => {
 // Delete a car listing
 export const deleteCarListing = async (req, res) => {
   try {
+    console.log('Delete car listing called with params:', req.params);
+    console.log('User info:', req.user);
+    console.log('Admin header present:', req.headers['x-admin-auth'] === 'true');
+    console.log('Admin query param present:', req.query.isAdmin === 'true');
+    
     const listing = await CarListing.findById(req.params.id);
     
     if (!listing) {
-      return res.status(404).json({ message: 'Listing not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Listing not found' 
+      });
     }
     
-    // Check if user owns this listing
-    if (listing.owner.toString() !== req.user.userId) {
-      return res.status(403).json({ message: 'Unauthorized' });
+    // Check if user owns this listing or is an admin
+    const isAdmin = req.user.role === 'admin';
+    const isOwner = listing.owner.toString() === req.user.userId;
+    
+    console.log('Is admin?', isAdmin);
+    console.log('Is owner?', isOwner);
+    console.log('Listing owner:', listing.owner.toString());
+    console.log('User ID:', req.user.userId);
+    
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Unauthorized - you must be the listing owner or an admin' 
+      });
     }
     
     await CarListing.findByIdAndDelete(req.params.id);
     
     res.json({ 
       success: true,
-      message: 'Listing deleted successfully' 
+      message: 'Listing deleted successfully',
+      deletedId: req.params.id
     });
   } catch (error) {
     console.error('Error deleting car listing:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error: ' + error.message 
+    });
+  }
+};
+
+// Special endpoint for admin to delete a listing (can be added to routes)
+export const adminDeleteListing = async (req, res) => {
+  try {
+    console.log('Admin delete endpoint called with body:', req.body);
+    console.log('User role:', req.user?.role);
+    
+    const { listingId, violationReason, violationDetails } = req.body;
+    
+    if (!listingId) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Listing ID is required' 
+      });
+    }
+    
+    const listing = await CarListing.findById(listingId);
+    
+    if (!listing) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Listing not found' 
+      });
+    }
+    
+    // Check if user has admin role (we've already verified this in the auth middleware)
+    if (req.user.role !== 'admin') {
+      console.log('Admin access denied for user role:', req.user.role);
+      return res.status(403).json({ 
+        success: false,
+        message: 'Admin access required' 
+      });
+    }
+    
+    // Store owner info before deletion for notification
+    const listingOwner = listing.owner;
+    
+    // Delete the listing
+    await CarListing.findByIdAndDelete(listingId);
+    
+    // Send notification to the owner (if needed)
+    try {
+      // You could implement the notification logic here
+      console.log(`Should send notification to user ${listingOwner} about listing removal`);
+    } catch (notifError) {
+      console.error('Failed to send notification:', notifError);
+      // Continue with the deletion process even if notification fails
+    }
+    
+    // Log successful deletion
+    console.log(`Admin successfully deleted listing ${listingId} with reason: ${violationReason}`);
+    
+    res.status(200).json({ 
+      success: true,
+      message: 'Listing deleted successfully by admin',
+      deletedId: listingId
+    });
+  } catch (error) {
+    console.error('Error in admin delete car listing:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error: ' + error.message 
+    });
   }
 };

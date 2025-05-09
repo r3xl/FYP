@@ -511,7 +511,6 @@ const validateForm = () => {
               {errors.topic && <span className="error-message">{errors.topic}</span>}
             </div>
             
-            {/* CHANGED: Car Brand dropdown instead of radio buttons */}
             <div className="form-group">
               <label htmlFor="description">Car Brand</label>
               <select 

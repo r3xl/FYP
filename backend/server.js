@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import authRoutes from '../backend/routes/authRoutes.js';
 import carRoutes from '../backend/routes/carRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js'; 
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -45,6 +46,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', carRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import './BuyNow.css';
 import ThreeJSModelViewer from './ThreeJSModelViewer';
+import NotificationPopup from './NotificationPopup';
 
 
 const BuyNow = () => {
@@ -17,6 +18,7 @@ const BuyNow = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showModelViewer, setShowModelViewer] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [userId, setUserId] = useState(null);
   const [paymentInfo, setPaymentInfo] = useState({
     fullName: '',
     email: '',
@@ -59,7 +61,7 @@ const BuyNow = () => {
 
   // All Brands and Car Types 
   const allBrandsFromSellPage = [
-    "Toyota", "Honda", "Ford", "BMW", "Audi", "Mercedes-Benz", "Hyundai", "Nissan", "Chevrolet", "Volkswagen",
+    "Toyota", "Honda", "Ford", "BMW", "Audi", "Mercedes", "Hyundai", "Nissan", "Chevrolet", "Volkswagen",
     "Lexus", "Mazda", "Kia", "Jeep", "Subaru", "Tesla", "Volvo", "Porsche", "Land Rover", "Jaguar", "Acura", 
     "Infiniti", "Cadillac", "Buick", "Mini", "Other"
   ];
@@ -188,6 +190,10 @@ const getFilteredListings = () => {
       userName: name,
       token
     });
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (userData && userData._id) {
+      setUserId(userData._id);
+    }
   }, []);
 
   function navigateToPopular() {
@@ -1154,6 +1160,7 @@ const confirmDelete = (car, e) => {
       )}
 
       {/* Notification Popup */}
+      {userId && <NotificationPopup userId={userId} />}
       {showNotification && (
         <div className={`notification-popup ${notificationType}`}>
           <span className="notification-message">{notificationMessage}</span>

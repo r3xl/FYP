@@ -1,0 +1,979 @@
+/* AdminPanel.css */
+
+/* Global Admin Styles */
+:root {
+    --admin-primary: #1a73e8;
+    --admin-secondary: #4285f4;
+    --admin-danger: #ea4335;
+    --admin-success: #34a853;
+    --admin-warning: #fbbc05;
+    --admin-light: #f8f9fa;
+    --admin-dark: #202124;
+    --admin-gray: #5f6368;
+    --admin-light-gray: #dadce0;
+    --admin-border-radius: 8px;
+    --admin-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --admin-transition: all 0.3s ease;
+  }
+  
+  /* Admin Login Styles */
+  .admin-login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    padding: 20px;
+  }
+  
+  .admin-login-card {
+    width: 100%;
+    max-width: 450px;
+    background-color: #fff;
+    border-radius: var(--admin-border-radius);
+    box-shadow: var(--admin-box-shadow);
+    padding: 40px;
+  }
+  
+  .admin-login-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .admin-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--admin-primary);
+    margin-bottom: 15px;
+  }
+  
+  .logo-icon {
+    margin-right: 10px;
+    font-size: 28px;
+  }
+  
+  .admin-login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-group label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--admin-dark);
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 12px 15px;
+    border: 1px solid var(--admin-light-gray);
+    border-radius: var(--admin-border-radius);
+    font-size: 16px;
+    transition: var(--admin-transition);
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+  }
+  
+  .login-error {
+    background-color: #fdeded;
+    color: var(--admin-danger);
+    padding: 12px;
+    border-radius: var(--admin-border-radius);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .admin-back-link {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .admin-back-link a {
+    color: var(--admin-primary);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  
+  .admin-back-link a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Button Styles */
+  .btn-primary,
+  .btn-outline,
+  .btn-danger {
+    padding: 12px 20px;
+    border-radius: var(--admin-border-radius);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--admin-transition);
+    text-align: center;
+    border: none;
+  }
+  
+  .btn-primary {
+    background-color: var(--admin-primary);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--admin-secondary);
+    box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+  }
+  
+  .btn-primary:disabled {
+    background-color: var(--admin-light-gray);
+    color: var(--admin-gray);
+    cursor: not-allowed;
+  }
+  
+  .btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--admin-primary);
+    color: var(--admin-primary);
+  }
+  
+  .btn-outline:hover {
+    background-color: rgba(26, 115, 232, 0.05);
+  }
+  
+  .btn-danger {
+    background-color: var(--admin-danger);
+    color: white;
+  }
+  
+  .btn-danger:hover {
+    background-color: #d93025;
+    box-shadow: 0 2px 8px rgba(234, 67, 53, 0.3);
+  }
+  
+  /* Admin Panel Layout */
+  .admin-panel-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+  }
+  
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .admin-dashboard {
+    display: flex;
+    flex: 1;
+  }
+  
+  .admin-sidebar {
+    width: 250px;
+    background-color: white;
+    border-right: 1px solid var(--admin-light-gray);
+    padding: 20px 0;
+  }
+  
+  .admin-nav {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .admin-nav-item {
+    padding: 15px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--admin-transition);
+    border-left: 4px solid transparent;
+  }
+  
+  .admin-nav-item:hover {
+    background-color: rgba(26, 115, 232, 0.05);
+  }
+  
+  .admin-nav-item.active {
+    background-color: rgba(26, 115, 232, 0.1);
+    border-left-color: var(--admin-primary);
+    color: var(--admin-primary);
+  }
+  
+  .admin-stats {
+    margin-top: 30px;
+    padding: 0 20px;
+  }
+  
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--admin-light-gray);
+  }
+  
+  .stat-label {
+    color: var(--admin-gray);
+    font-size: 14px;
+  }
+  
+  .stat-value {
+    font-weight: 600;
+    color: var(--admin-dark);
+  }
+  
+  .admin-main-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+  }
+  
+  .admin-page-title {
+    margin-bottom: 25px;
+  }
+  
+  .admin-page-title h1 {
+    font-size: 24px;
+    color: var(--admin-dark);
+    font-weight: 500;
+  }
+  
+  /* Search and Filter */
+  .search-sort-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+  
+  .search-bar {
+    flex: 1;
+    display: flex;
+    position: relative;
+  }
+  
+  .search-bar input {
+    flex: 1;
+    padding: 12px 15px;
+    padding-right: 45px;
+    border: 1px solid var(--admin-light-gray);
+    border-radius: var(--admin-border-radius);
+    font-size: 16px;
+    transition: var(--admin-transition);
+  }
+  
+  .search-bar input:focus {
+    outline: none;
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+  }
+  
+  .search-button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--admin-gray);
+  }
+  
+  .filter-button {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    background-color: white;
+    border: 1px solid var(--admin-light-gray);
+    border-radius: var(--admin-border-radius);
+    font-size: 16px;
+    cursor: pointer;
+    transition: var(--admin-transition);
+    position: relative;
+  }
+  
+  .filter-button:hover {
+    border-color: var(--admin-primary);
+  }
+  
+  .filter-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: var(--admin-danger);
+    border-radius: 50%;
+  }
+  
+  /* Car Listings Grid */
+  .admin-car-listings {
+    margin-top: 20px;
+  }
+  
+  .admin-listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .admin-car-item {
+    background-color: white;
+    border-radius: var(--admin-border-radius);
+    box-shadow: var(--admin-box-shadow);
+    overflow: hidden;
+    transition: var(--admin-transition);
+  }
+  
+  .admin-car-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .car-image {
+    height: 200px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .car-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .admin-car-item:hover .car-image img {
+    transform: scale(1.05);
+  }
+  
+  .placeholder-image {
+    width: 100%;
+    height: 100%;
+    background-color: #f1f3f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--admin-gray);
+  }
+  
+  .model3d-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--admin-primary);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  .car-details {
+    padding: 15px;
+  }
+  
+  .car-details h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  
+  .car-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  
+  .car-type {
+    background-color: #e8f0fe;
+    color: var(--admin-primary);
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+  
+  .car-owner {
+    color: var(--admin-gray);
+  }
+  
+  .car-description-preview {
+    margin: 10px 0;
+    color: var(--admin-gray);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  .car-date {
+    font-size: 12px;
+    color: var(--admin-gray);
+    margin-bottom: 15px;
+  }
+  
+  .admin-car-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .view-details-btn,
+  .remove-listing-btn {
+    flex: 1;
+    padding: 8px 12px;
+    text-align: center;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--admin-transition);
+  }
+  
+  .view-details-btn {
+    background-color: #e8f0fe;
+    color: var(--admin-primary);
+    border: none;
+  }
+  
+  .view-details-btn:hover {
+    background-color: #d2e3fc;
+  }
+  
+  .remove-listing-btn {
+    background-color: #fdeded;
+    color: var(--admin-danger);
+    border: none;
+  }
+  
+  .remove-listing-btn:hover {
+    background-color: #fad2cf;
+  }
+  
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  
+  .car-details-modal,
+  .delete-modal,
+  .filter-modal {
+    background-color: white;
+    border-radius: var(--admin-border-radius);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  .close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--admin-gray);
+    z-index: 2;
+  }
+  
+  /* Car Details Modal */
+  .car-details-modal {
+    width: 800px;
+    padding: 25px;
+  }
+  
+  .car-details-modal h2 {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    padding-right: 30px;
+  }
+  
+  .view-toggle-buttons {
+    display: flex;
+    margin-bottom: 15px;
+    gap: 10px;
+  }
+  
+  .view-toggle-btn {
+    padding: 8px 15px;
+    border: 1px solid var(--admin-light-gray);
+    background-color: white;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--admin-transition);
+  }
+  
+  .view-toggle-btn.active {
+    background-color: var(--admin-primary);
+    color: white;
+    border-color: var(--admin-primary);
+  }
+  
+  .car-details-images {
+    margin-bottom: 25px;
+  }
+  
+  .car-image-carousel {
+    display: flex;
+    align-items: center;
+    height: 400px;
+    position: relative;
+  }
+  
+  .carousel-image-container {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .carousel-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  
+  .image-counter {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+  }
+  
+  .carousel-button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    margin: 0 10px;
+    transition: var(--admin-transition);
+  }
+  
+  .carousel-button:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  .image-thumbnails {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+  
+  .thumbnail {
+    width: 70px;
+    height: 70px;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: var(--admin-transition);
+    border: 2px solid transparent;
+  }
+  
+  .thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .thumbnail:hover {
+    opacity: 0.9;
+  }
+  
+  .thumbnail.active {
+    opacity: 1;
+    border-color: var(--admin-primary);
+  }
+  
+  .model-viewer-container {
+    height: 400px;
+    margin-bottom: 25px;
+  }
+  
+  .threejs-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+  }
+  
+  .model-viewer-instructions {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--admin-gray);
+  }
+  
+  .car-details-info {
+    margin-top: 20px;
+  }
+  
+  .detail-section {
+    margin-bottom: 20px;
+  }
+  
+  .detail-section h3 {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--admin-light-gray);
+  }
+  
+  .detail-row {
+    display: flex;
+    margin-bottom: 8px;
+  }
+  
+  .detail-label {
+    width: 120px;
+    font-weight: 500;
+    color: var(--admin-gray);
+  }
+  
+  .car-description {
+    line-height: 1.6;
+    color: var(--admin-dark);
+  }
+  
+  .car-details-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  /* Delete Confirmation Modal */
+  .delete-modal {
+    width: 450px;
+    padding: 30px;
+    text-align: center;
+  }
+  
+  .delete-modal h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+  
+  .delete-actions {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  }
+  
+  .violation-modal {
+    text-align: left;
+  }
+  
+  .violation-modal h3 {
+    text-align: center;
+  }
+  
+  /* Filter Modal */
+  .filter-modal {
+    width: 500px;
+    padding: 25px;
+  }
+  
+  .filter-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .filter-modal-header h3 {
+    margin: 0;
+  }
+  
+  .filter-section {
+    margin-bottom: 25px;
+  }
+  
+  .filter-section h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .filter-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 6px 12px;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    font-size: 14px;
+    transition: var(--admin-transition);
+  }
+  
+  .filter-option:hover {
+    background-color: #f1f3f4;
+  }
+  
+  .filter-option input {
+    margin-right: 5px;
+  }
+  
+  .filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  /* Loading and Error States */
+  .loading-container,
+  .error-container,
+  .no-listings {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    text-align: center;
+  }
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(26, 115, 232, 0.2);
+    border-top-color: var(--admin-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .error-message {
+    color: var(--admin-danger);
+    margin-bottom: 20px;
+  }
+  
+  .no-listings h3 {
+    margin-bottom: 20px;
+    color: var(--admin-gray);
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 1024px) {
+    .admin-dashboard {
+      flex-direction: column;
+    }
+  
+    .admin-sidebar {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid var(--admin-light-gray);
+      padding: 10px 0;
+    }
+  
+    .admin-nav {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  
+    .admin-nav-item {
+      border-left: none;
+      border-bottom: 2px solid transparent;
+    }
+  
+    .admin-nav-item.active {
+      border-left-color: transparent;
+      border-bottom-color: var(--admin-primary);
+    }
+  
+    .admin-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+    }
+  
+    .stat-item {
+      border-bottom: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 20px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .admin-listings-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+  
+    .car-details-modal {
+      width: 95%;
+    }
+  
+    .car-image-carousel {
+      height: 300px;
+    }
+  
+    .search-sort-container {
+      flex-direction: column;
+    }
+  
+    .filter-button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .admin-listings-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .admin-login-card {
+      padding: 20px;
+    }
+  
+    .admin-header {
+      padding: 15px;
+      flex-direction: column;
+      gap: 10px;
+    }
+  
+    .admin-main-content {
+      padding: 15px;
+    }
+  
+    .detail-row {
+      flex-direction: column;
+    }
+  
+    .detail-label {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+  
+    .car-image-carousel {
+      height: 250px;
+    }
+  
+    .carousel-button {
+      width: 30px;
+      height: 30px;
+      font-size: 18px;
+    }
+  }
+  /* Success Notification Popup */
+  .success-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1100;
+    background-color: #4CAF50;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 350px;
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  .success-content {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px 20px;
+  }
+  
+  .success-icon {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 18px;
+    color: white;
+  }
+  
+  .success-message {
+    flex: 1;
+    color: white;
+  }
+  
+  .success-message p {
+    margin: 0;
+    padding: 2px 0;
+  }
+  
+  .close-success {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0 0 0 15px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  
+  .close-success:hover {
+    opacity: 1;
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }

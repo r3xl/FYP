@@ -2,13 +2,14 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { auth } from '../routes/auth.js';
+import { auth, isAdmin } from '../routes/auth.js';
 import { 
   createCarListing, 
   getAllCarListings,
   getCarListing,
   updateCarListing,
-  deleteCarListing
+  deleteCarListing,
+  adminDeleteListing
 } from '../controller/carController.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,5 +54,8 @@ router.get('/car-listings', getAllCarListings);
 router.get('/car-listings/:id', getCarListing);
 router.put('/car-listings/:id', auth, updateCarListing);
 router.delete('/car-listings/:id', auth, deleteCarListing);
+
+// Admin routes - use both auth and isAdmin middlewares
+router.post('/admin/delete-listing', [auth, isAdmin], adminDeleteListing);
 
 export default router;
