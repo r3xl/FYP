@@ -51,7 +51,7 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 // Mark notification as read
-router.patch('/:id/read', async (req, res) => {
+router.put('/:id/read', async (req, res) => {
   try {
     const { id } = req.params;
     const notification = await Notification.findByIdAndUpdate(
@@ -89,7 +89,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Mark all notifications as read for a user
-router.patch('/user/:userId/read-all', async (req, res) => {
+router.put('/user/:userId/read-all', async (req, res) => {
   try {
     const { userId } = req.params;
     const result = await Notification.updateMany(

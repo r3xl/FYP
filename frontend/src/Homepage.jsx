@@ -1,12 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './Homepage.css';
+import NotificationPopup from './NotificationPopup'; // Import the NotificationPopup component
 
 const Homepage = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [popularCars, setPopularCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null); // Add state for userId
+  
+  // Slider state
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  // Slider images - replace these URLs with your actual image paths
+  const sliderImages = [
+    '/images/slider/slider1.jpg',
+    '/images/slider/slider2.jpg',
+    '/images/slider/slider3.jpg',
+    '/images/slider/slider4.jpg',
+    '/images/slider/slider5.jpg',
+  ];
+  
+  // Auto-advance slider every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prevSlide) => (prevSlide + 1) % sliderImages.length);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [sliderImages.length]);
+  
+  // Function to change slide
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
+  };
+  
+  // Function to go to next slide
+  const nextSlide = () => {
+    setCurrentSlide((prevSlide) => (prevSlide + 1) % sliderImages.length);
+  };
+  
+  // Function to go to previous slide
+  const prevSlide = () => {
+    setCurrentSlide((prevSlide) => 
+      prevSlide === 0 ? sliderImages.length - 1 : prevSlide - 1
+    );
+  };
   
   // Function to handle logout
   const handleLogout = () => {
@@ -31,8 +71,14 @@ const Homepage = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  // Fetch car listings on component mount
+  // Set user ID from localStorage and fetch car listings on component mount
   useEffect(() => {
+    // Get user ID from localStorage and set it in state
+    const storedUserId = localStorage.getItem('userId');
+    if (storedUserId) {
+      setUserId(storedUserId);
+    }
+    
     const fetchPopularCars = async () => {
       try {
         setLoading(true);
@@ -65,6 +111,9 @@ const Homepage = () => {
 
   return (
     <div className="homepage-container">
+      {/* Include NotificationPopup component */}
+      {userId && <NotificationPopup userId={userId} />}
+      
       {/* Navigation */}
       <header className="header">
         <div className="logo">
@@ -80,7 +129,7 @@ const Homepage = () => {
             <li><a href="#popular">Popular</a></li>
             <li><a href="#contact">Contact</a></li>
             <li><a href="#about">About</a></li>
-            <li><Link to="/sell" className="btn-outline">Sell Now</Link></li>
+            <li><Link to="/sell" className="btn-primary">Sell Now</Link></li>
             <li><Link to="/buy" className="btn-primary">Buy Now</Link></li>
           </ul>
         </nav>
@@ -91,22 +140,44 @@ const Homepage = () => {
               <span className="welcome-text">Welcome, {userName}</span>
             </div>
           )}
-          <span className="logout-button" onClick={handleLogout}>Logout</span>
+          <span className="btn-primary" onClick={handleLogout}>Logout</span>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="hero-section" id="home">
-        <div className="hero-content">
-          <h1>Welcome to AutoVision</h1>
-          <p>Find your dream car at the best prices. Browse through our extensive collection and buy or sell with ease.</p>
-          <div className="hero-buttons">
-            <button onClick={navigateToBuyNow} className="btn-primary">Buy Now</button>
-            <button onClick={navigateToSellNow} className="btn-outline">Sell Now</button>
+      {/* Hero Section with Image Slider */}
+      <section className="hero-slider-section" id="home">
+        <div className="slider-container">
+          {sliderImages.map((img, index) => (
+            <div 
+              key={index} 
+              className={`slider-slide ${index === currentSlide ? 'active' : ''}`}
+              style={{ backgroundImage: `url(${img})` }}
+            >
+              <div className="slider-content">
+                <h1>Welcome to AutoVision</h1>
+                <p>Find your dream car at the best prices.</p>
+                <div className="hero-buttons">
+                  <button onClick={navigateToBuyNow} className="btn-primary">Buy Now</button>
+                  <button onClick={navigateToSellNow} className="btn-primary">Sell Now</button>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {/* Slider controls */}
+          <button className="slider-control prev" onClick={prevSlide}>❮</button>
+          <button className="slider-control next" onClick={nextSlide}>❯</button>
+          
+          {/* Slider indicators */}
+          <div className="slider-indicators">
+            {sliderImages.map((_, index) => (
+              <button 
+                key={index} 
+                className={`slider-indicator ${index === currentSlide ? 'active' : ''}`} 
+                onClick={() => goToSlide(index)}
+              ></button>
+            ))}
           </div>
-        </div>
-        <div className="hero-image">
-          <div className="placeholder-image"></div>
         </div>
       </section>
 
@@ -178,7 +249,7 @@ const Homepage = () => {
           )}
         </div>
         <div className="view-all-container">
-          <button onClick={navigateToBuyNow} className="btn-outline">View all</button>
+          <button onClick={navigateToBuyNow} className="btn-primary">View all</button>
         </div>
       </section>
 
@@ -189,7 +260,7 @@ const Homepage = () => {
           <p>AutoVision is your trusted platform for buying and selling quality vehicles. We connect car enthusiasts with their dream cars and help sellers find the right buyers.</p>
           <div className="about-buttons">
             <button onClick={navigateToBuyNow} className="btn-primary">Buy Now</button>
-            <button onClick={navigateToSellNow} className="btn-outline">Sell Now</button>
+            <button onClick={navigateToSellNow} className="btn-primary">Sell Now</button>
           </div>
         </div>
         <div className="about-image">

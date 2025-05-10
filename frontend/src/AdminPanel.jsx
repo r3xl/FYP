@@ -271,6 +271,11 @@ const AdminPanel = () => {
 
   // Send notification to user about listing removal
   const sendNotificationToUser = async (userId, carInfo, violationInfo) => {
+    if (!userId) {
+      console.error('Cannot send notification: Missing user ID');
+      return false;
+    }
+    
     try {
       const authToken = localStorage.getItem('adminToken');
       
@@ -280,45 +285,65 @@ const AdminPanel = () => {
         return false;
       }
       
-      // Prepare notification headers
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
-      };
+      console.log('Sending notification to user ID:', userId);
+      console.log('Car info:', carInfo);
+      console.log('Violation info:', violationInfo);
       
-      // Create notification payload
+      // Create notification payload with improved details
       const notificationPayload = {
         userId: userId,
         type: 'violation',
-        title: 'Listing Removed',
+        title: 'Your Listing Has Been Removed',
         message: `Your listing for ${carInfo.brand} ${carInfo.carName || carInfo.carType} has been removed due to a violation: ${violationInfo.reason}`,
         details: violationInfo.customMessage || 'No additional details provided.',
         carId: carInfo._id
       };
       
-      console.log('Sending notification to user:', userId, 'with payload:', notificationPayload);
+      // Log the full request for debugging
+      console.log('Sending notification request:', {
+        url: 'http://localhost:5000/api/notifications/create',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: notificationPayload
+      });
       
       // Send notification using the notification route
       const notificationResponse = await fetch('http://localhost:5000/api/notifications/create', {
         method: 'POST',
-        headers: headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify(notificationPayload)
       });
       
-      if (!notificationResponse.ok) {
-        const errorData = await notificationResponse.json().catch(() => ({ error: notificationResponse.statusText }));
-        console.error('Notification API error:', errorData.error || errorData.message || notificationResponse.statusText);
+      // Log complete response details for debugging
+      const responseText = await notificationResponse.text();
+      console.log('Notification API raw response:', responseText);
+      
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse response JSON:', e);
         return false;
       }
       
-      const responseData = await notificationResponse.json();
+      if (!notificationResponse.ok) {
+        console.error('Notification API error:', responseData.error || responseData.message || notificationResponse.statusText);
+        return false;
+      }
+      
       console.log('Notification sent successfully:', responseData);
       return true;
     } catch (error) {
       console.error('Failed to send notification:', error);
       return false;
     }
-  };
+  }
 
   // Handle delete with violation
   const handleDeleteWithViolation = async () => {

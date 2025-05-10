@@ -13,8 +13,8 @@ const NotificationPopup = ({ userId }) => {
     if (userId) {
       fetchNotifications();
       
-      // Set up polling for new notifications every 30 seconds
-      const intervalId = setInterval(fetchNotifications, 30000);
+      // Set up polling for new notifications every 15 seconds
+      const intervalId = setInterval(fetchNotifications, 15000);
       
       // Clean up interval on unmount
       return () => clearInterval(intervalId);
@@ -29,6 +29,7 @@ const NotificationPopup = ({ userId }) => {
       setLoading(true);
       setError(null);
       
+      console.log('Fetching notifications for user:', userId);
       const response = await fetch(`http://localhost:5000/api/notifications/user/${userId}`);
       
       if (!response.ok) {
@@ -36,9 +37,11 @@ const NotificationPopup = ({ userId }) => {
       }
       
       const notificationsData = await response.json();
+      console.log('Fetched notifications:', notificationsData);
       
       // Filter for unread notifications
       const unreadNotifications = notificationsData.filter(notification => !notification.read);
+      console.log('Unread notifications:', unreadNotifications.length);
       
       setNotifications(unreadNotifications);
       
@@ -72,8 +75,9 @@ const NotificationPopup = ({ userId }) => {
   // Mark notification as read
   const markAsRead = async (notificationId) => {
     try {
+      console.log('Marking notification as read:', notificationId);
       const response = await fetch(`http://localhost:5000/api/notifications/${notificationId}/read`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         }
@@ -146,7 +150,18 @@ const NotificationPopup = ({ userId }) => {
     }
   };
 
-  if (loading || !showNotification || !activeNotification) {
+  // Show notification counter to access all notifications
+  const handleNotificationCounterClick = () => {
+    // Move to the next notification
+    if (notifications.length > 1 && activeNotification) {
+      const currentIndex = notifications.findIndex(n => n._id === activeNotification._id);
+      const nextIndex = (currentIndex + 1) % notifications.length;
+      setActiveNotification(notifications[nextIndex]);
+    }
+  };
+
+  // Don't render anything if no notifications or still loading
+  if (!showNotification || !activeNotification) {
     return null;
   }
 
@@ -181,9 +196,13 @@ const NotificationPopup = ({ userId }) => {
         </div>
       </div>
 
-      {/* Badge indicating number of unread notifications */}
+      {/* Badge indicating number of unread notifications - clickable to navigate */}
       {notifications.length > 1 && (
-        <div className="notification-counter">
+        <div 
+          className="notification-counter"
+          onClick={handleNotificationCounterClick}
+          style={{ cursor: 'pointer' }}
+        >
           {notifications.length}
         </div>
       )}
