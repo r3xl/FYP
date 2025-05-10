@@ -183,25 +183,27 @@ const Homepage = () => {
 
       {/* Services Section */}
       <section className="services-section" id="services">
-        <div className="section-header">
-          <h2>Our Services</h2>
-          <p>We offer the best car buying and selling experience with full transparency and ease.</p>
-        </div>
         <div className="service-highlights">
           <div className="service-card">
-            <div className="service-icon"><div className="icon-placeholder"></div></div>
+            <div className="service-icon">
+              <img src="/images/icons/icon1.png" alt="Chat with Sellers" className="service-img" />
+            </div>
+            <h3>Chat with Sellers.</h3>
+            <p>Directly communicate with sellers in real time.</p>
+          </div>
+          <div className="service-card">
+            <div className="service-icon">
+              <img src="/images/icons/icon2.png" alt="Easy Selling" className="service-img" />
+            </div>
             <h3>Easy Selling</h3>
             <p>Sell your car effortlessly with our platform.</p>
           </div>
           <div className="service-card">
-            <div className="service-icon"><div className="icon-placeholder"></div></div>
-            <h3>Verified Listings</h3>
-            <p>All cars go through verification for quality assurance.</p>
-          </div>
-          <div className="service-card">
-            <div className="service-icon"><div className="icon-placeholder"></div></div>
-            <h3>Best Prices</h3>
-            <p>We ensure competitive pricing on all listings.</p>
+            <div className="service-icon">
+              <img src="/images/icons/icon3.png" alt="Easy Filter Options" className="service-img" />
+            </div>
+            <h3>Easy Filter Options</h3>
+            <p>Search by model, name, brand.</p>
           </div>
         </div>
       </section>
@@ -253,38 +255,155 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* About Us Section */}
-      <section className="about-section" id="about">
-        <div className="about-content">
-          <h2>About Us</h2>
-          <p>AutoVision is your trusted platform for buying and selling quality vehicles. We connect car enthusiasts with their dream cars and help sellers find the right buyers.</p>
-          <div className="about-buttons">
-            <button onClick={navigateToBuyNow} className="btn-primary">Buy Now</button>
-            <button onClick={navigateToSellNow} className="btn-primary">Sell Now</button>
-          </div>
+      {/* About Us Section - Enhanced */}
+<section className="about-section" id="about">
+  <div className="about-container">
+    <div className="about-content">
+      <h2 className="about-title">ABOUT US</h2>
+      <div className="about-underline"></div>
+      <p className="about-tagline">Driving dreams forward since 2024</p>
+      <p className="about-description">
+        AutoVision is your trusted platform for buying and selling quality vehicles. 
+        We connect car enthusiasts with their dream cars and help sellers find the 
+        right buyers. Our dedicated team ensures a seamless experience from start 
+        to finish, with a focus on transparency, convenience, and customer satisfaction.
+      </p>
+      <div className="about-stats">
+        <div className="stat-item">
+          <div className="stat-number">3.7K+</div>
+          <div className="stat-label">Happy Customers</div>
         </div>
-        <div className="about-image">
-          <div className="placeholder-image"></div>
+        <div className="stat-item">
+          <div className="stat-number">1.5K+</div>
+          <div className="stat-label">Cars Sold</div>
         </div>
-      </section>
+        <div className="stat-item">
+          <div className="stat-number">4.5</div>
+          <div className="stat-label">Rating</div>
+        </div>
+      </div>
+      <div className="about-buttons">
+        <button onClick={navigateToBuyNow} className="btn-primary">Buy Now</button>
+        <button onClick={navigateToSellNow} className="btn-primary">Sell Now</button>
+      </div>
+    </div>
+    <div className="about-image-container">
+      <div className="about-team-illustration">
+        <div className="about-blob"></div>
+        <div className="about-blob-secondary"></div>
+        <img src="/images/about/about1.png" alt="AutoVision Team" className="team-image" />
+        <div className="about-floating-element element-1">🚗</div>
+        <div className="about-floating-element element-2">💬</div>
+        <div className="about-floating-element element-3">⭐</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-      {/* Contact Section */}
-      <section className="contact-section" id="contact">
-        <div className="section-header">
-          <h2>Contact Now</h2>
-        </div>
-        <div className="contact-container">
-          <form className="contact-form">
-            <input type="text" placeholder="Name" className="form-input" />
-            <input type="email" placeholder="E-mail" className="form-input" />
-            <textarea placeholder="Message" className="form-textarea"></textarea>
-            <button type="submit" className="btn-primary">Send</button>
-          </form>
-          <div className="contact-image">
-            <div className="placeholder-image"></div>
+      {/* Enhanced Contact Section */}
+<section className="contact-section" id="contact">
+  <div className="section-header">
+    <h2>Get In Touch</h2>
+    <p>Have questions about our services? Reach out to our team today.</p>
+  </div>
+  
+  <div className="enhanced-contact-container">
+    <div className="contact-info-card">
+      <div className="contact-header">
+        <h3>Contact Information</h3>
+        <p>Fill out the form and our team will get back to you within 24 hours</p>
+      </div>
+      
+      <div className="contact-details">
+        <div className="contact-item">
+          <div className="contact-icon">
+            <i className="phone-icon">📞</i>
+          </div>
+          <div className="contact-text">
+            <p>+1 (977) 9860340616</p>
           </div>
         </div>
-      </section>
+        
+        <div className="contact-item">
+          <div className="contact-icon">
+            <i className="email-icon">✉️</i>
+          </div>
+          <div className="contact-text">
+            <p>auto.infovision@gmail.com</p>
+          </div>
+        </div>
+        
+        <div className="contact-item">
+          <div className="contact-icon">
+            <i className="location-icon">📍</i>
+          </div>
+          <div className="contact-text">
+            <p>123 Auto Avenue, Car City</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="contact-social">
+        <h4>Connect With Us</h4>
+        <div className="social-icons">
+          <a href="https://facebook.com" className="social-icon"><i className="facebook-icon">f</i></a>
+          <a href="https://x.com" className="social-icon"><i className="twitter-icon">t</i></a>
+          <a href="https://instagram.com" className="social-icon"><i className="instagram-icon">ig</i></a>
+          <a href="https://linkedin.com" className="social-icon"><i className="linkedin-icon">in</i></a>
+        </div>
+      </div>
+    </div>
+    
+    <div className="contact-form-wrapper">
+      <form className="enhanced-contact-form">
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="name">Full Name</label>
+            <input type="text" id="name" className="form-input-enhanced" placeholder="John Doe" />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="email">Email Address</label>
+            <input type="email" id="email" className="form-input-enhanced" placeholder="john@example.com" />
+          </div>
+        </div>
+        
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="phone">Phone Number</label>
+            <input type="tel" id="phone" className="form-input-enhanced" placeholder="(977) 9812345678" />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="subject">Subject</label>
+            <select id="subject" className="form-input-enhanced">
+              <option value="" disabled selected>Select a subject</option>
+              <option value="service">Car Service</option>
+              <option value="sales">Car Sales</option>
+              <option value="support">Customer Support</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="message">Your Message</label>
+          <textarea id="message" className="form-textarea-enhanced" placeholder="How can we help you today?"></textarea>
+        </div>
+        
+        <button type="submit" className="btn-contact-submit">
+          Send Message
+          <span className="submit-icon">→</span>
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  <div className="contact-decoration">
+    <div className="decoration-circle"></div>
+    <div className="decoration-dots"></div>
+  </div>
+</section>
 
       {/* Footer */}
       <footer className="footer">

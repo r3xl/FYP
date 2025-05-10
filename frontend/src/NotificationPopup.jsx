@@ -108,25 +108,13 @@ const NotificationPopup = ({ userId }) => {
     }
   };
 
-  // Close notification without marking as read
+  // Close notification AND mark as read (updated to work like markAsRead)
   const closeNotification = () => {
-    setShowNotification(false);
-    
-    // After animation completes, check for more notifications
-    setTimeout(() => {
-      if (notifications.length > 1 && activeNotification) {
-        const nextNotificationIndex = notifications.findIndex(n => n._id === activeNotification._id) + 1;
-        if (nextNotificationIndex < notifications.length) {
-          setActiveNotification(notifications[nextNotificationIndex]);
-          setShowNotification(true);
-        } else {
-          setActiveNotification(notifications[0]);
-          setShowNotification(true);
-        }
-      } else {
-        setActiveNotification(null);
-      }
-    }, 300);
+    if (activeNotification) {
+      markAsRead(activeNotification._id);
+    } else {
+      setShowNotification(false);
+    }
   };
 
   // Calculate notification time relative to now (e.g., "2 hours ago")

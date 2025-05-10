@@ -2,7 +2,7 @@
 
 .notification-popup {
   position: fixed;
-  top: 20px;
+  top: 80px; /* Increased from 20px to avoid being cut off by header */
   right: 20px;
   max-width: 350px;
   min-width: 300px;
