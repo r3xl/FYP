@@ -12,7 +12,7 @@ const SellPage = () => {
     phone: '',
     topic: '',
     carName: '',
-    description: '', // This will now store the selected car brand from dropdown
+    description: '', 
     message: '',
     terms: false,
     images: [],
@@ -423,7 +423,7 @@ const validateForm = () => {
               <span className="welcome-text">Welcome, {userName}</span>
             </div>
           )}
-          <span className="logout-button" onClick={handleLogout}>Logout</span>
+          <span className="btn-primary" onClick={handleLogout}>Logout</span>
         </div>
       </header>
 

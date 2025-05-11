@@ -1183,7 +1183,7 @@ const confirmDelete = (car, e) => {
             <li><a onClick={navigateToPopular}>Popular</a></li>
             <li><a onClick={navigateToContact}>Contact</a></li>
             <li><a onClick={navigateToAbout}>About</a></li>
-            <li><Link to="/sell" className="btn-outline">Sell Now</Link></li>
+            <li><Link to="/sell" className="btn-primary">Sell Now</Link></li>
             <li><Link to="/buy" className="btn-primary">Buy Now</Link></li>
           </ul>
         </nav>
@@ -1194,7 +1194,7 @@ const confirmDelete = (car, e) => {
               <span className="welcome-text">Welcome, {userData.userName}</span>
             </div>
           )}
-          <span className="logout-button" onClick={handleLogout}>Logout</span>
+          <span className="btn-primary" onClick={handleLogout}>Logout</span>
         </div>
       </header>
 

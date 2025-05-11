@@ -301,11 +301,8 @@ body {
   border-radius: 4px;
   font-family: inherit;
   font-size: 0.95rem;
-}
-
-.form-textarea {
-  min-height: 120px;
-  resize: vertical;
+  background-color: #fff;
+  color: #333;
 }
 
 .radio-group {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ThreeJSModelViewer from './ThreeJSModelViewer'; // Import the ThreeJSModelViewer component
 import './AdminPanel.css';
 
 const AdminPanel = () => {
@@ -678,11 +679,8 @@ const AdminPanel = () => {
             {/* 3D Model Viewer */}
             {showModelViewer && has3DModel(selectedCar) ? (
               <div className="model-viewer-container">
-                <iframe 
-                  src={`/threejs-viewer?model=${encodeURIComponent(`http://localhost:5000${selectedCar.model3d}`)}`}
-                  title="3D Model Viewer"
-                  className="threejs-iframe"
-                ></iframe>
+                {/* Replace iframe with ThreeJSModelViewer component */}
+                <ThreeJSModelViewer modelUrl={`http://localhost:5000${selectedCar.model3d}`} />
                 <div className="model-viewer-instructions">
                   <p>Click and drag to rotate | Scroll to zoom | Right-click to pan</p>
                 </div>
@@ -822,7 +820,7 @@ const AdminPanel = () => {
           AutoVision Admin
         </div>
         <div className="admin-actions">
-          <button onClick={handleLogout} className="btn-outline">Logout</button>
+          <button onClick={handleLogout} className="btn-primary">Logout</button>
         </div>
       </header>
 

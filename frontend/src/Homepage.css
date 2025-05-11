@@ -1035,6 +1035,7 @@ body {
   font-weight: 500;
 }
 
+/* Fixed input styles - explicitly setting background to white and text to black */
 .form-input-enhanced, 
 .form-textarea-enhanced {
   padding: 1rem;
@@ -1043,6 +1044,15 @@ body {
   font-family: 'Roboto', sans-serif;
   font-size: 0.95rem;
   transition: all 0.3s;
+  background-color: #ffffff;
+  color: #333333;
+}
+
+/* Fixed select element style */
+select.form-input-enhanced {
+  background-color: #ffffff;
+  color: #333333;
+  appearance: auto;
 }
 
 .form-input-enhanced:focus, 
@@ -1050,11 +1060,19 @@ body {
   border-color: #0056b3;
   box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
   outline: none;
+  background-color: #ffffff;
 }
 
 .form-textarea-enhanced {
   min-height: 150px;
   resize: vertical;
+}
+
+/* Added placeholder styles for better visibility */
+.form-input-enhanced::placeholder,
+.form-textarea-enhanced::placeholder {
+  color: #999999;
+  opacity: 1;
 }
 
 .btn-contact-submit {
@@ -1164,7 +1182,6 @@ body {
     width: 100%;
   }
 }
-
 /* Footer - Completely Redesigned */
 .footer {
   background-color: #1a2a3a;
