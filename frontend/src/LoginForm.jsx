@@ -7,32 +7,36 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+  
+    // Debug: Log the values being sent
+    console.log('Login attempt:', { email, password: password ? '[PROVIDED]' : '[EMPTY]' });
   
     if (!email || !password) {
       setError('Please fill in all fields.');
+      setLoading(false);
       return;
     }
   
     // Admin login check
     if (email === 'autovision@gmail.com' && password === 'autovision123') {
-      // Generate a proper admin JWT token
       const adminTokenPayload = {
-        userId: 'admin-user-id', // You could use a real admin ID or this placeholder
+        userId: 'admin-user-id',
         role: 'admin',
         name: 'Admin',
-        exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour expiration
+        exp: Math.floor(Date.now() / 1000) + (60 * 60)
       };
       
-      // Simple base64 encoding (not secure for production, just for demo)
       const base64Encode = (obj) => {
         return btoa(JSON.stringify(obj)).replace(/=/g, '');
       };
       
-      // Create a simple JWT-like token (header.payload.signature)
       const adminToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${base64Encode(adminTokenPayload)}.admin-signature`;
       
       localStorage.setItem('adminAuthenticated', 'true');
@@ -40,12 +44,20 @@ const LoginForm = () => {
       localStorage.setItem('name', 'Admin');
       localStorage.setItem('userId', 'admin-user-id');
       
+      setLoading(false);
       navigate('/admin');
       return;
     }
   
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      console.log('Sending request to:', 'http://localhost:5000/api/auth/login');
+      
+      const response = await axios.post('http://localhost:5000/api/auth/login', { 
+        email: email.trim(), 
+        password 
+      });
+  
+      console.log('Login response:', response);
   
       if (response.status === 200) {
         localStorage.setItem('token', response.data.token);
@@ -55,14 +67,36 @@ const LoginForm = () => {
         navigate('/homepage');
       }
     } catch (error) {
+      console.error('Login error:', error);
+      
       if (error.response) {
-        setError(error.response.data.message || 'Error during login.');
+        console.log('Error response status:', error.response.status);
+        console.log('Error response data:', error.response.data);
+        
+        // More specific error messages
+        if (error.response.status === 400) {
+          const message = error.response.data.message;
+          if (message === 'Please provide all fields') {
+            setError('Both email and password are required.');
+          } else if (message === 'Invalid credentials') {
+            setError('Invalid email or password. Please check your credentials.');
+          } else {
+            setError(message || 'Invalid login credentials.');
+          }
+        } else {
+          setError(error.response.data.message || 'Error during login.');
+        }
+      } else if (error.request) {
+        console.log('No response received:', error.request);
+        setError('Unable to connect to the server. Please check if the server is running.');
       } else {
-        setError('Error connecting to the server.');
+        console.log('Request setup error:', error.message);
+        setError('Error setting up login request.');
       }
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <div className="homepage-container auth-container">
@@ -92,6 +126,7 @@ const LoginForm = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 className="form-input"
+                disabled={loading}
               />
             </div>
             <div className="form-group">
@@ -101,9 +136,16 @@ const LoginForm = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 className="form-input"
+                disabled={loading}
               />
             </div>
-            <button type="submit" className="btn-primary form-button">Login</button>
+            <button 
+              type="submit" 
+              className="btn-primary form-button"
+              disabled={loading}
+            >
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
           </form>
           <p className="redirect-text">
             Don't have an account? {' '}

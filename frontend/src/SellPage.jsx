@@ -270,7 +270,7 @@ const validateForm = () => {
     
     try {
       // API endpoint - make sure this matches your backend
-      const endpoint = 'http://localhost:5000/api/car-listings';
+      const endpoint = 'http://localhost:5000/api/cars/car-listings';
       
       console.log(`Submitting to: ${endpoint}`);
       console.log('Token:', token);

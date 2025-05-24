@@ -79,7 +79,7 @@ const AdminPanel = () => {
   const fetchCarListings = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/car-listings');
+      const response = await fetch('http://localhost:5000/api/cars/car-listings');
       if (!response.ok) {
         throw new Error('Failed to fetch car listings');
       }
@@ -272,79 +272,84 @@ const AdminPanel = () => {
 
   // Send notification to user about listing removal
   const sendNotificationToUser = async (userId, carInfo, violationInfo) => {
-    if (!userId) {
-      console.error('Cannot send notification: Missing user ID');
+    // Validate inputs
+    if (!userId || userId === 'undefined' || userId.trim() === '') {
+      console.error('Cannot send notification: Invalid user ID provided:', userId);
+      return false;
+    }
+    
+    if (!carInfo || !violationInfo) {
+      console.error('Cannot send notification: Missing car info or violation info');
       return false;
     }
     
     try {
-      const authToken = localStorage.getItem('adminToken');
+      console.log('📧 Preparing notification for user:', userId);
+      console.log('📄 Car info:', {
+        id: carInfo._id,
+        brand: carInfo.brand,
+        name: carInfo.carName,
+        type: carInfo.carType
+      });
+      console.log('⚠️ Violation info:', violationInfo);
       
-      // Check if we have a valid token
-      if (!authToken) {
-        console.error('Cannot send notification: Missing admin token');
-        return false;
-      }
-      
-      console.log('Sending notification to user ID:', userId);
-      console.log('Car info:', carInfo);
-      console.log('Violation info:', violationInfo);
-      
-      // Create notification payload with improved details
+      // Create notification payload - simplified to match schema exactly
       const notificationPayload = {
-        userId: userId,
-        type: 'violation',
+        userId: userId.toString().trim(),
+        type: 'violation', // Use 'violation' type directly
         title: 'Your Listing Has Been Removed',
         message: `Your listing for ${carInfo.brand} ${carInfo.carName || carInfo.carType} has been removed due to a violation: ${violationInfo.reason}`,
-        details: violationInfo.customMessage || 'No additional details provided.',
+        details: violationInfo.customMessage || null, // Use details field properly
         carId: carInfo._id
       };
       
-      // Log the full request for debugging
-      console.log('Sending notification request:', {
-        url: 'http://localhost:5000/api/notifications/create',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: notificationPayload
+      console.log('📤 Sending notification request with payload:', {
+        ...notificationPayload,
+        message: notificationPayload.message.substring(0, 100) + '...'
       });
       
-      // Send notification using the notification route
       const notificationResponse = await fetch('http://localhost:5000/api/notifications/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
+          // Remove Authorization header since we made the route public
         },
         body: JSON.stringify(notificationPayload)
       });
       
-      // Log complete response details for debugging
-      const responseText = await notificationResponse.text();
-      console.log('Notification API raw response:', responseText);
+      console.log('📨 Notification API response status:', notificationResponse.status);
       
+      // Handle response
       let responseData;
+      const responseContentType = notificationResponse.headers.get('content-type');
+      
       try {
-        responseData = JSON.parse(responseText);
-      } catch (e) {
-        console.error('Failed to parse response JSON:', e);
+        if (responseContentType && responseContentType.includes('application/json')) {
+          responseData = await notificationResponse.json();
+        } else {
+          const responseText = await notificationResponse.text();
+          console.log('Non-JSON response received:', responseText.substring(0, 200));
+          responseData = { error: 'Non-JSON response received from server' };
+        }
+      } catch (parseError) {
+        console.error('Failed to parse notification response:', parseError);
         return false;
       }
       
-      if (!notificationResponse.ok) {
-        console.error('Notification API error:', responseData.error || responseData.message || notificationResponse.statusText);
+      if (notificationResponse.ok && responseData.success) {
+        console.log('✅ Notification sent successfully:', responseData);
+        return true;
+      } else {
+        console.error('❌ Notification API error:', responseData);
+        console.error('Response data:', responseData);
         return false;
       }
       
-      console.log('Notification sent successfully:', responseData);
-      return true;
     } catch (error) {
-      console.error('Failed to send notification:', error);
+      console.error('❌ Failed to send notification - Network/Request error:', error);
       return false;
     }
-  }
+  };
 
   // Handle delete with violation
   const handleDeleteWithViolation = async () => {
@@ -367,29 +372,31 @@ const AdminPanel = () => {
       // Verify we have an admin token
       if (!adminToken) {
         alert('Admin authentication token missing. Please log in again.');
-        handleLogout(); // Force logout as authentication is invalid
+        handleLogout();
         return;
       }
       
-      // Create proper headers with admin authentication
+      console.log('Attempting to delete listing with ID:', carToDelete._id);
+      
+      // Store car data before deletion for notification and UI updates
+      const carData = {...carToDelete};
+      const violationInfo = { ...violationData };
+      
+      // Create headers for API requests
       const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${adminToken}`,
-        'x-admin-auth': 'true' // Special admin header
+        'x-admin-auth': 'true'
       };
       
-      console.log('Attempting to delete listing with ID:', carToDelete._id);
+      let deletionSuccessful = false;
+      let errorMessage = '';
       
-      // Store car data before deletion for notification
-      const carData = {...carToDelete};
-      // Store violation info before any state changes
-      const violationInfo = { ...violationData };
-      
-      // Try admin deletion endpoint first
+      // Try the admin-specific deletion endpoint first
       try {
         console.log('Trying admin deletion endpoint...');
-        const adminDeleteResponse = await fetch(
-          'http://localhost:5000/api/admin/delete-listing', {
+        
+        const adminDeleteResponse = await fetch('http://localhost:5000/api/admin/delete-listing', {
           method: 'POST',
           headers: headers,
           body: JSON.stringify({
@@ -399,38 +406,104 @@ const AdminPanel = () => {
           })
         });
         
-        // Full response logging for debugging
-        console.log('Status:', adminDeleteResponse.status);
-        console.log('Status text:', adminDeleteResponse.statusText);
+        console.log('Admin endpoint response status:', adminDeleteResponse.status);
         
-        const deleteResult = await adminDeleteResponse.json();
-        console.log('Response body:', deleteResult);
+        // Check if response is JSON or HTML
+        const contentType = adminDeleteResponse.headers.get('content-type');
+        console.log('Response content type:', contentType);
         
-        if (!adminDeleteResponse.ok) {
-          throw new Error(`Admin deletion endpoint failed: ${deleteResult.message || adminDeleteResponse.statusText}`);
+        if (contentType && contentType.includes('application/json')) {
+          const deleteResult = await adminDeleteResponse.json();
+          console.log('Admin deletion response:', deleteResult);
+          
+          if (adminDeleteResponse.ok) {
+            deletionSuccessful = true;
+            console.log('Admin deletion successful');
+          } else {
+            errorMessage = deleteResult.message || deleteResult.error || 'Admin deletion failed';
+            throw new Error(errorMessage);
+          }
+        } else {
+          // Response is likely HTML (404 page), endpoint doesn't exist
+          const responseText = await adminDeleteResponse.text();
+          console.log('Admin endpoint returned HTML, likely 404:', responseText.substring(0, 200));
+          throw new Error('Admin deletion endpoint not found');
         }
         
-        // Update local state to reflect deletion
-        setCarListings(carListings.filter(car => car._id !== carToDelete._id));
+      } catch (adminError) {
+        console.error('Admin deletion endpoint error:', adminError.message);
         
-        // Clear deletion state
+        // Try the standard car deletion endpoint as fallback
+        try {
+          console.log('Falling back to standard deletion endpoint...');
+          
+          const standardDeleteResponse = await fetch(
+            `http://localhost:5000/api/cars/car-listings/${carToDelete._id}`, 
+            {
+              method: 'DELETE',
+              headers: headers
+            }
+          );
+          
+          console.log('Standard endpoint response status:', standardDeleteResponse.status);
+          
+          // Handle different response types
+          const responseContentType = standardDeleteResponse.headers.get('content-type');
+          let deleteResult;
+          
+          try {
+            if (responseContentType && responseContentType.includes('application/json')) {
+              deleteResult = await standardDeleteResponse.json();
+            } else {
+              const responseText = await standardDeleteResponse.text();
+              // If it's not JSON, create a mock response object
+              deleteResult = { 
+                message: responseText || 'No response message',
+                success: standardDeleteResponse.ok 
+              };
+            }
+          } catch (parseError) {
+            console.error('Error parsing response:', parseError);
+            deleteResult = { message: 'Failed to parse server response' };
+          }
+          
+          console.log('Standard deletion response:', deleteResult);
+          
+          if (standardDeleteResponse.ok) {
+            deletionSuccessful = true;
+            console.log('Standard deletion successful');
+          } else {
+            errorMessage = deleteResult.message || deleteResult.error || `HTTP ${standardDeleteResponse.status}: ${standardDeleteResponse.statusText}`;
+            throw new Error(errorMessage);
+          }
+          
+        } catch (standardError) {
+          console.error('Standard deletion endpoint error:', standardError.message);
+          throw new Error(`Both deletion methods failed. Last error: ${standardError.message}`);
+        }
+      }
+      
+      // If we reach here, deletion was successful
+      if (deletionSuccessful) {
+        // Update local state to remove the deleted car
+        setCarListings(prevListings => prevListings.filter(car => car._id !== carToDelete._id));
+        
+        // Clear deletion modal state
         setShowDeleteConfirm(false);
         setCarToDelete(null);
-        
-        // Reset violation data
         setViolationData({
           reason: '',
           customMessage: ''
         });
         
-        // Set success notification
+        // Show success notification
         setSuccessNotification({
           show: true,
           carName: `${carData.brand} ${carData.carName || carData.carType}`,
           reason: violationInfo.reason
         });
         
-        // Auto-hide the success notification after 5 seconds
+        // Auto-hide success notification after 5 seconds
         setTimeout(() => {
           setSuccessNotification({
             show: false,
@@ -439,131 +512,63 @@ const AdminPanel = () => {
           });
         }, 5000);
         
-        // Send notification to user - try multiple times if needed
-        let notificationSent = false;
-        let retryCount = 0;
-        const maxRetries = 3;
+        // Attempt to send notification to user (with retry logic)
+        console.log('Attempting to send notification to user...');
         
-        while (!notificationSent && retryCount < maxRetries) {
-          try {
-            notificationSent = await sendNotificationToUser(carData.owner, carData, {
-              reason: violationInfo.reason,
-              customMessage: violationInfo.customMessage
-            });
-            
-            if (notificationSent) {
-              console.log('Notification sent to user successfully');
-            } else {
-              console.warn(`Notification sending failed, attempt ${retryCount + 1}/${maxRetries}`);
-              retryCount++;
-              // Wait before retry
-              if (retryCount < maxRetries) {
-                await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay between retries
-              }
-            }
-          } catch (notifError) {
-            console.error('Failed to send notification to user:', notifError);
-            retryCount++;
-            // Wait before retry
-            if (retryCount < maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-          }
-        }
-        
-        if (!notificationSent) {
-          console.error('Failed to send notification after multiple attempts');
-        }
-        
-      } catch (adminError) {
-        console.error('Admin deletion endpoint error:', adminError);
-        
-        // Fallback to standard deletion endpoint
-        try {
-          console.log('Falling back to standard deletion endpoint...');
-          const standardDeleteResponse = await fetch(
-            `http://localhost:5000/api/car-listings/${carToDelete._id}`, {
-            method: 'DELETE',
-            headers: headers
-          });
-          
-          if (!standardDeleteResponse.ok) {
-            const errorData = await standardDeleteResponse.json().catch(() => ({}));
-            throw new Error(`Standard deletion failed: ${errorData.message || standardDeleteResponse.statusText}`);
-          }
-          
-          // Update local state
-          setCarListings(carListings.filter(car => car._id !== carToDelete._id));
-          
-          // Clear deletion state
-          setShowDeleteConfirm(false);
-          setCarToDelete(null);
-          
-          // Reset violation data
-          setViolationData({
-            reason: '',
-            customMessage: ''
-          });
-          
-          // Set success notification
-          setSuccessNotification({
-            show: true,
-            carName: `${carData.brand} ${carData.carName || carData.carType}`,
-            reason: violationInfo.reason
-          });
-          
-          // Auto-hide the success notification
-          setTimeout(() => {
-            setSuccessNotification({
-              show: false,
-              carName: '',
-              reason: ''
-            });
-          }, 5000);
-          
-          // Try to send notification to user with retry mechanism
+        // Only try to send notification if we have a valid user ID
+        if (carData.owner && carData.owner !== 'undefined' && carData.owner.trim() !== '') {
           let notificationSent = false;
           let retryCount = 0;
           const maxRetries = 3;
           
           while (!notificationSent && retryCount < maxRetries) {
             try {
+              console.log(`Notification attempt ${retryCount + 1}/${maxRetries}`);
+              
               notificationSent = await sendNotificationToUser(carData.owner, carData, {
                 reason: violationInfo.reason,
                 customMessage: violationInfo.customMessage
               });
               
               if (notificationSent) {
-                console.log('Notification sent to user successfully');
+                console.log('✅ Notification sent to user successfully');
+                break;
               } else {
-                console.warn(`Notification sending failed, attempt ${retryCount + 1}/${maxRetries}`);
+                console.warn(`❌ Notification sending failed, attempt ${retryCount + 1}/${maxRetries}`);
                 retryCount++;
-                // Wait before retry
+                
+                // Wait before retry (exponential backoff)
                 if (retryCount < maxRetries) {
-                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  const delay = Math.pow(2, retryCount) * 1000; // 2s, 4s, 8s
+                  await new Promise(resolve => setTimeout(resolve, delay));
                 }
               }
             } catch (notifError) {
-              console.error('Failed to send notification to user:', notifError);
+              console.error(`Notification attempt ${retryCount + 1} failed:`, notifError.message);
               retryCount++;
+              
               // Wait before retry
               if (retryCount < maxRetries) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                const delay = Math.pow(2, retryCount) * 1000;
+                await new Promise(resolve => setTimeout(resolve, delay));
               }
             }
           }
           
           if (!notificationSent) {
-            console.error('Failed to send notification after multiple attempts');
+            console.error('❌ Failed to send notification after all retry attempts');
+            // Don't show error to admin - deletion was successful, notification is secondary
           }
-        } catch (standardError) {
-          console.error('Standard deletion endpoint error:', standardError);
-          alert(`Failed to delete listing: ${standardError.message}`);
+        } else {
+          console.warn('⚠️ Cannot send notification: Invalid or missing user ID');
         }
+        
+        console.log('✅ Listing deletion completed successfully');
       }
+      
     } catch (error) {
-      console.error('Delete with violation error:', error);
-      alert(`An error occurred: ${error.message}`);
+      console.error('❌ Delete operation failed:', error.message);
+      alert(`Failed to delete listing: ${error.message}`);
     } finally {
       setDeleteInProgress(false);
     }

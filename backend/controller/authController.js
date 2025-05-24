@@ -20,13 +20,13 @@ export const registerUser = async (req, res) => {
     await newUser.save();
 
     // Generate token for immediate login
+    // BUG FIX: Change 'user._id' to 'newUser._id' since 'user' was undefined
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: newUser._id },
       process.env.JWT_SECRET || 'default_secret',
       { expiresIn: '1h' }
     );
     
-
     res.status(201).json({ 
       message: 'User registered successfully',
       token,

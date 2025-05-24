@@ -82,7 +82,8 @@ const Homepage = () => {
     const fetchPopularCars = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/car-listings');
+        // Updated API endpoint to match the server route structure
+        const response = await fetch('http://localhost:5000/api/cars/car-listings');
         
         if (!response.ok) {
           throw new Error('Failed to fetch car listings');

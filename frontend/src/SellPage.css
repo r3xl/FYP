@@ -231,8 +231,8 @@ body {
 }
 
 .btn-outline:hover {
-  background-color: #0056b3;
-  color: #fff !important;
+  background-color: white;
+  color: #0056b3 !important;
   box-shadow: 0 2px 4px rgba(0, 86, 179, 0.2);
   transform: translateY(-2px);
 }
@@ -985,8 +985,8 @@ label[for]:not([for="image-upload"]):not([for="model-upload"]):after {
 .success-icon {
   width: 70px;
   height: 70px;
-  background-color: #28a745;
-  color: white;
+  background-color: white;
+  color: #28a745;
   border-radius: 50%;
   display: flex;
   justify-content: center;

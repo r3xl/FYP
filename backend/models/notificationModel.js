@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const notificationSchema = new mongoose.Schema({
+const NotificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -8,23 +8,34 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    required: true,
-    enum: ['violation', 'system', 'info']
+    enum: ['message', 'info', 'warning', 'success', 'violation'], // Added 'violation' type
+    default: 'info',
+    required: true
   },
   title: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   message: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   details: {
-    type: String
+    type: String,
+    trim: true,
+    default: null // Added details field that was being used in your frontend
+  },
+  conversationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Conversation',
+    default: null
   },
   carId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'CarListing'
+    ref: 'CarListing',
+    default: null
   },
   read: {
     type: Boolean,
@@ -36,7 +47,35 @@ const notificationSchema = new mongoose.Schema({
   }
 });
 
-// Check if the model exists before creating it
-const Notification = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
+// Index for efficient querying
+NotificationSchema.index({ userId: 1, createdAt: -1 });
+NotificationSchema.index({ userId: 1, read: 1 });
+NotificationSchema.index({ userId: 1, type: 1 });
+
+// Add a virtual for getting relative time
+NotificationSchema.virtual('relativeTime').get(function() {
+  const now = new Date();
+  const diffMs = now - this.createdAt;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+  
+  if (diffDay > 0) {
+    return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+  } else if (diffHr > 0) {
+    return `${diffHr} hour${diffHr > 1 ? 's' : ''} ago`;
+  } else if (diffMin > 0) {
+    return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+  } else {
+    return 'just now';
+  }
+});
+
+// Ensure virtual fields are included when converting to JSON
+NotificationSchema.set('toJSON', { virtuals: true });
+NotificationSchema.set('toObject', { virtuals: true });
+
+const Notification = mongoose.model('Notification', NotificationSchema);
 
 export default Notification;

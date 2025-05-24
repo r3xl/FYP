@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import './BuyNow.css';
 import ThreeJSModelViewer from './ThreeJSModelViewer';
 import NotificationPopup from './NotificationPopup';
+import { toast } from 'react-toastify';
 
 
 const BuyNow = () => {
@@ -58,6 +60,8 @@ const BuyNow = () => {
   }); 
   const [availableBrands, setAvailableBrands] = useState([]);
   const [availableCarTypes, setAvailableCarTypes] = useState([]);
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
+  const token = localStorage.getItem('token');
 
   // All Brands and Car Types 
   const allBrandsFromSellPage = [
@@ -120,6 +124,109 @@ const getFilteredListings = () => {
   filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   return filtered;
+};
+
+// Function to start a chat with car owner
+const startChatWithOwner = async (car) => {
+  try {
+    // Get user data and token from localStorage 
+    const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
+    
+    console.log('Starting chat with owner', { 
+      userId: userId || 'No user ID', 
+      token: token ? 'Token exists' : 'No token' 
+    });
+    
+    // Check authentication state
+    if (!token || !userId) {
+      console.log('User not logged in, redirecting to login');
+      // Save the car details to return to after login
+      localStorage.setItem('pendingChatCar', JSON.stringify({
+        id: car._id,
+        brand: car.brand,
+        model: car.carName
+      }));
+      
+      // Redirect to login with appropriate state
+      navigate('/login', { 
+        state: { 
+          from: location.pathname,
+          message: 'Please log in to chat with the seller'
+        } 
+      });
+      return;
+    }
+    
+    // Extract owner ID - handle both object and string format
+    let ownerId;
+    if (car.owner) {
+      // Handle if owner is an object or just an ID string
+      ownerId = typeof car.owner === 'object' ? car.owner._id : car.owner;
+    } else if (car.ownerName) {
+      // If we have an owner name but no direct ID, we need to find the owner
+      console.log('Using owner name as reference:', car.ownerName);
+      
+      try {
+        // You would need an API endpoint to look up a user by name
+        ownerId = car.owner; // Use the owner property if available
+      } catch (error) {
+        console.error('Error looking up owner by name:', error);
+        toast.error('Could not identify the car owner. Please try again later.');
+        return;
+      }
+    } else {
+      console.error('Missing owner information:', car);
+      toast.error('Unable to start chat: Missing owner information');
+      return;
+    }
+    
+    console.log('Initiating chat with owner ID:', ownerId);
+    
+    // Create API config with auth token
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    };
+    
+    try {
+      // Create a new conversation or get existing one with this owner
+      const response = await axios.post(
+        'http://localhost:5000/api/chat/conversations',
+        { participantIds: [ownerId] },
+        config
+      );
+      console.log('Conversation created/retrieved:', response.data);
+      // Navigate to chat with this conversation open
+      navigate('/chat', { 
+        state: { 
+          openConversation: response.data.conversation._id,
+          carInfo: {
+            id: car._id,
+            brand: car.brand,
+            model: car.carName
+          }
+        }
+      });
+    } catch (error) {
+      console.error('API Error:', error.response?.data || error.message);
+      
+      // Handle specific error codes
+      if (error.response?.status === 401) {
+        // Handle unauthorized - token might be expired
+        toast.error('Your session has expired. Please log in again.');
+        localStorage.removeItem('token'); // Clear invalid token
+        navigate('/login');
+      } else {
+        toast.error('Failed to start chat: ' + (error.response?.data?.message || error.message));
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error starting chat with owner:', error);
+    toast.error('Failed to start chat with owner: ' + (error.response?.data?.message || error.message));
+  }
 };
 
   
@@ -255,7 +362,7 @@ const getFilteredListings = () => {
     const fetchCarListings = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/car-listings');
+        const response = await fetch('http://localhost:5000/api/cars/car-listings');
         if (!response.ok) {
           throw new Error('Failed to fetch car listings');
         }
@@ -376,7 +483,7 @@ const getFilteredListings = () => {
     console.log('Editing car token:', userData.token);
     
     try {
-      const response = await fetch(`http://localhost:5000/api/car-listings/${editingCar._id}`, {
+      const response = await fetch(`http://localhost:5000/api/cars/car-listings/${editingCar._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -485,7 +592,7 @@ const confirmDelete = (car, e) => {
     if (!carToDelete || !userData.token) return;
     
     try {
-      const response = await fetch(`http://localhost:5000/api/car-listings/${carToDelete._id}`, {
+      const response = await fetch(`http://localhost:5000/api/cars/car-listings/${carToDelete._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${userData.token}`
@@ -670,7 +777,6 @@ const confirmDelete = (car, e) => {
       
       // Simulate payment processing
       try {
-        // Here you would typically make an API call to process the payment
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         alert(`Payment successful! You've purchased ${selectedCar.brand} ${selectedCar.carType}`);
@@ -930,232 +1036,233 @@ const confirmDelete = (car, e) => {
         </div>
       )}
       
-      {/* Car Details Modal */}
       {showDetailsModal && selectedCar && (
-        <div className="modal-overlay" onClick={closeCarDetails}>
-        <div className="car-details-modal" onClick={e => e.stopPropagation()}>
-          <span className="close-modal" onClick={closeCarDetails}>&times;</span>
-          <h2>{selectedCar.brand.toUpperCase()} {selectedCar.carName || ''}</h2>
-
-
+  <div className="modal-overlay" onClick={closeCarDetails}>
+    <div className="car-details-modal" onClick={e => e.stopPropagation()}>
+      <span className="close-modal" onClick={closeCarDetails}>&times;</span>
+      <h2>{selectedCar.brand.toUpperCase()} {selectedCar.carName || ''}</h2>
       
-          
-          {editMode ? (
-            /* Edit Form */
-            <div className="edit-form-container">
-              <h3>Edit Car Listing</h3>
-              <div className="form-group">
-                <label htmlFor="brand">Brand</label>
-                <input
-                  type="text"
-                  id="brand"
-                  name="brand"
-                  value={editFormData.brand}
-                  onChange={handleEditInputChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="carType">Car Type</label>
-                <input
-                  type="text"
-                  id="carType"
-                  name="carType"
-                  value={editFormData.carType}
-                  onChange={handleEditInputChange}
-                />
-              </div>
+      {editMode ? (
+        /* Edit Form */
+        <div className="edit-form-container">
+          <h3>Edit Car Listing</h3>
+          <div className="form-group">
+            <label htmlFor="brand">Brand</label>
+            <input
+              type="text"
+              id="brand"
+              name="brand"
+              value={editFormData.brand}
+              onChange={handleEditInputChange}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="carType">Car Type</label>
+            <input
+              type="text"
+              id="carType"
+              name="carType"
+              value={editFormData.carType}
+              onChange={handleEditInputChange}
+            />
+          </div>
 
-              <div className="form-group">
-                <label htmlFor="carName">Car Name</label>
-                <input
-                  type="text"
-                  id="carName"
-                  name="carName"
-                  value={editFormData.carName}
-                  onChange={handleEditInputChange}
-                />
-              </div>
+          <div className="form-group">
+            <label htmlFor="carName">Car Name</label>
+            <input
+              type="text"
+              id="carName"
+              name="carName"
+              value={editFormData.carName}
+              onChange={handleEditInputChange}
+            />
+          </div>
 
-              <div className="form-group">
-                <label htmlFor="details">Details</label>
-                <textarea
-                  id="details"
-                  name="details"
-                  value={editFormData.details}
-                  onChange={handleEditInputChange}
-                  rows="5"
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={editFormData.email}
-                  onChange={handleEditInputChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="phone">Phone</label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={editFormData.phone}
-                  onChange={handleEditInputChange}
-                />
-              </div>
-              <div className="edit-form-actions">
-                <button className="btn-outline" onClick={cancelEdit}>Cancel</button>
-                <button className="btn-primary" onClick={saveEditedCar}>Save Changes</button>
-              </div>
-            </div>
-          ) : (
-            /* Regular car details view */
-            <>
-              {/* Toggle between images and 3D model if available */}
-              {has3DModel(selectedCar) && (
-                <div className="view-toggle-buttons">
-                  <button 
-                    className={`view-toggle-btn ${!showModelViewer ? 'active' : ''}`} 
-                    onClick={() => setShowModelViewer(false)}
-                  >
-                    Photos
-                  </button>
-                  <button 
-                    className={`view-toggle-btn ${showModelViewer ? 'active' : ''}`} 
-                    onClick={() => setShowModelViewer(true)}
-                  >
-                    3D Model
-                  </button>
-                </div>
-              )}
-              
-              {/* 3D Model Viewer */}
-              {showModelViewer && has3DModel(selectedCar) ? (
-                <div className="model-viewer-container">
-                  <ThreeJSModelViewer modelUrl={`http://localhost:5000${selectedCar.model3d}`} />
-                  <div className="model-viewer-instructions">
-                    <p>Click and drag to rotate | Scroll to zoom | Right-click to pan</p>
+          <div className="form-group">
+            <label htmlFor="details">Details</label>
+            <textarea
+              id="details"
+              name="details"
+              value={editFormData.details}
+              onChange={handleEditInputChange}
+              rows="5"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={editFormData.email}
+              onChange={handleEditInputChange}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="phone">Phone</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={editFormData.phone}
+              onChange={handleEditInputChange}
+            />
+          </div>
+          <div className="edit-form-actions">
+            <button className="btn-outline" onClick={cancelEdit}>Cancel</button>
+            <button className="btn-primary" onClick={saveEditedCar}>Save Changes</button>
+          </div>
+        </div>
+      ) : (
+              /* Regular car details view */
+              <>
+                {/* Toggle between images and 3D model if available */}
+                {has3DModel(selectedCar) && (
+                  <div className="view-toggle-buttons">
+                    <button 
+                      className={`view-toggle-btn ${!showModelViewer ? 'active' : ''}`} 
+                      onClick={() => setShowModelViewer(false)}
+                    >
+                      Photos
+                    </button>
+                    <button 
+                      className={`view-toggle-btn ${showModelViewer ? 'active' : ''}`} 
+                      onClick={() => setShowModelViewer(true)}
+                    >
+                      3D Model
+                    </button>
                   </div>
-                </div>
-              ) : (
-                /* Image carousel */
-                <div className="car-details-images">
-                  {selectedCar.images && selectedCar.images.length > 0 ? (
-                    <>
-                      <div className="car-image-carousel">
-                        <button 
-                          className="carousel-button prev" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            navigateImages('prev');
-                          }}
-                        >
-                          ‹
-                        </button>
-                      
-                        <div className="carousel-image-container">
-                          <img 
-                            src={`http://localhost:5000${selectedCar.images[activeImageIndex]}`} 
-                            alt={`${selectedCar.brand} ${activeImageIndex + 1}`} 
-                          />
-                          <div className="image-counter">
-                            {activeImageIndex + 1} / {selectedCar.images.length}
+                )}
+                
+                {/* 3D Model Viewer */}
+                {showModelViewer && has3DModel(selectedCar) ? (
+                  <div className="model-viewer-container">
+                    <ThreeJSModelViewer modelUrl={`http://localhost:5000${selectedCar.model3d}`} />
+                    <div className="model-viewer-instructions">
+                      <p>Click and drag to rotate | Scroll to zoom | Right-click to pan</p>
+                    </div>
+                  </div>
+                ) : (
+                  /* Image carousel */
+                  <div className="car-details-images">
+                    {selectedCar.images && selectedCar.images.length > 0 ? (
+                      <>
+                        <div className="car-image-carousel">
+                          <button 
+                            className="carousel-button prev" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              navigateImages('prev');
+                            }}
+                          >
+                            ‹
+                          </button>
+                        
+                          <div className="carousel-image-container">
+                            <img 
+                              src={`http://localhost:5000${selectedCar.images[activeImageIndex]}`} 
+                              alt={`${selectedCar.brand} ${activeImageIndex + 1}`} 
+                            />
+                            <div className="image-counter">
+                              {activeImageIndex + 1} / {selectedCar.images.length}
+                            </div>
                           </div>
+                          
+                          <button 
+                            className="carousel-button next" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              navigateImages('next');
+                            }}
+                          >
+                            ›
+                          </button>
                         </div>
                         
-                        <button 
-                          className="carousel-button next" 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            navigateImages('next');
-                          }}
-                        >
-                          ›
-                        </button>
+                        {/* Thumbnail navigation */}
+                        {selectedCar.images.length > 1 && (
+                          <div className="image-thumbnails">
+                            {selectedCar.images.map((image, index) => (
+                              <div 
+                                key={index} 
+                                className={`thumbnail ${index === activeImageIndex ? 'active' : ''}`}
+                                onClick={() => setActiveImageIndex(index)}
+                              >
+                                <img 
+                                  src={`http://localhost:5000${image}`} 
+                                  alt={`${selectedCar.brand} thumbnail ${index + 1}`} 
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="car-detail-image no-image">
+                        <span>No images available</span>
                       </div>
-                      
-                      {/* Thumbnail navigation */}
-                      {selectedCar.images.length > 1 && (
-                        <div className="image-thumbnails">
-                          {selectedCar.images.map((image, index) => (
-                            <div 
-                              key={index} 
-                              className={`thumbnail ${index === activeImageIndex ? 'active' : ''}`}
-                              onClick={() => setActiveImageIndex(index)}
-                            >
-                              <img 
-                                src={`http://localhost:5000${image}`} 
-                                alt={`${selectedCar.brand} thumbnail ${index + 1}`} 
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="car-detail-image no-image">
-                      <span>No images available</span>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <div className="car-details-info">
-                <div className="detail-section">
-                  <h3>Car Information</h3>
-                  <div className="detail-row">
-                    <span className="detail-label">Type:</span>
-                    <span className="detail-value">{selectedCar.carType}</span>
+                    )}
                   </div>
-                  <div className="detail-row">
-                  <span className="detail-label">Model:</span>
-                  <span className="detail-value">{selectedCar.carName || 'Not specified'}</span>
-                </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Brand:</span>
-                    <span className="detail-value">{selectedCar.brand}</span>
-                  </div>
-                </div>
-                
-                <div className="detail-section">
-                  <h3>Full Description</h3>
-                  <p className="car-description">{selectedCar.details}</p>
-                </div>
-                
-                <div className="detail-section">
-                  <h3>Contact Information</h3>
-                  <div className="detail-row">
-                    <span className="detail-label">Seller:</span>
-                    <span className="detail-value">{selectedCar.ownerName}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Email:</span>
-                    <span className="detail-value">{selectedCar.email}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">Phone:</span>
-                    <span className="detail-value">{selectedCar.phone}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Action buttons - for owner and buyers */}
-              <div className="car-details-actions">
-                {isOwner(selectedCar) ? (
-                  <>
-                    <button className="btn-primary" onClick={() => handleEdit(selectedCar)}>Edit Listing</button>
-                    <button className="btn-danger" onClick={() => confirmDelete(selectedCar)}>Delete Listing</button>
-                  </>
-                ) : (
-                  <button className="btn-purchase" onClick={openPaymentModal}>Buy Now</button>
                 )}
-              </div>
-            </>
-          )}
-        </div>
+                
+                <div className="car-details-info">
+                  <div className="detail-section">
+                    <h3>Car Information</h3>
+                    <div className="detail-row">
+                      <span className="detail-label">Type:</span>
+                      <span className="detail-value">{selectedCar.carType}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Model:</span>
+                      <span className="detail-value">{selectedCar.carName || 'Not specified'}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Brand:</span>
+                      <span className="detail-value">{selectedCar.brand}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="detail-section">
+                    <h3>Full Description</h3>
+                    <p className="car-description">{selectedCar.details}</p>
+                  </div>
+                  
+                  <div className="detail-section">
+                    <h3>Contact Information</h3>
+                    <div className="detail-row">
+                      <span className="detail-label">Seller:</span>
+                      <span className="detail-value">{selectedCar.ownerName}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Email:</span>
+                      <span className="detail-value">{selectedCar.email}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Phone:</span>
+                      <span className="detail-value">{selectedCar.phone}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Action buttons - for owner and buyers */}
+                  <div className="car-details-actions">
+                    {isOwner(selectedCar) ? (
+                      <>
+                        <button className="btn-primary" onClick={() => handleEdit(selectedCar)}>Edit Listing</button>
+                        <button className="btn-danger" onClick={() => confirmDelete(selectedCar)}>Delete Listing</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn-purchase" onClick={openPaymentModal}>Buy Now</button>
+                        <button className="btn-chat" onClick={() => startChatWithOwner(selectedCar)}>
+                          <i className="fas fa-comment-alt"></i> Chat with {selectedCar.ownerName || 'Owner'}
+                        </button>
+                      </>
+                    )}
+                  </div>
+              </>
+            )}
+          </div>
         </div>
       )}
 

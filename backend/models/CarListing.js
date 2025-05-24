@@ -6,7 +6,6 @@ const CarListingSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  ownerName: { type: String, required: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true },
@@ -20,4 +19,7 @@ const CarListingSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-export default mongoose.model('CarListing', CarListingSchema);
+// Export the model but check if it's already been registered to avoid the error
+const CarListing = mongoose.models.CarListing || mongoose.model('CarListing', CarListingSchema);
+
+export default CarListing;

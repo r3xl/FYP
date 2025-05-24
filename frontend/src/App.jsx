@@ -8,6 +8,7 @@ import BuyNow from './BuyNow';
 import SellPage from './SellPage';
 import AdminPanel from './AdminPanel';
 import UserLayout from './UserLayout';
+import Chat from './Chat'; // Import Chat component
 
 function App() {
     return (
@@ -21,6 +22,7 @@ function App() {
                     <Route path="/homepage" element={<Homepage />} />
                     <Route path="/buy" element={<BuyNow />} />
                     <Route path="/sell" element={<SellPage />} />
+                    <Route path="/chat" element={<Chat />} /> {/* Add Chat route */}
                 </Route>
                 
                 <Route path="/" element={<Navigate to="/register" />} />  {/* Redirect to registration */}

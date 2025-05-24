@@ -70,7 +70,8 @@ export const getAllCarListings = async (req, res) => {
 // Get a single car listing
 export const getCarListing = async (req, res) => {
   try {
-    const listing = await CarListing.findById(req.params.id);
+    const listing = await CarListing.findById(req.params.id)
+      .populate('owner', '_id name'); // Only populate ID and name for security
 
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
@@ -95,6 +96,11 @@ export const updateCarListing = async (req, res) => {
     
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
+    }
+    
+    // Check authentication
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ message: 'Authentication required' });
     }
     
     // Check if user owns this listing or is an admin
@@ -151,6 +157,23 @@ export const deleteCarListing = async (req, res) => {
       });
     }
     
+    // Check authentication first
+    if (!req.user) {
+      console.log('No user object found in request');
+      return res.status(401).json({ 
+        success: false,
+        message: 'Authentication required' 
+      });
+    }
+    
+    if (!req.user.userId) {
+      console.log('No userId found in user object');
+      return res.status(401).json({ 
+        success: false,
+        message: 'User ID not found in authentication' 
+      });
+    }
+    
     // Check if user owns this listing or is an admin
     const isAdmin = req.user.role === 'admin';
     const isOwner = listing.owner.toString() === req.user.userId;
@@ -195,6 +218,14 @@ export const adminDeleteListing = async (req, res) => {
       return res.status(400).json({ 
         success: false,
         message: 'Listing ID is required' 
+      });
+    }
+    
+    // Check authentication
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Authentication required' 
       });
     }
     
