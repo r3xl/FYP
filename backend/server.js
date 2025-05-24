@@ -12,7 +12,8 @@ import setupSocketIO from './socketConfig.js';
 import authRoutes from './routes/authRoutes.js';
 import carRoutes from './routes/carRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
-import notificationRoutes from './routes/notificationRoutes.js';  // Import notification routes
+import notificationRoutes from './routes/notificationRoutes.js';  
+import contactRoutes from './routes/contact.js'; // Updated to ES6 import
 
 // Configure environment variables
 dotenv.config();
@@ -61,6 +62,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/notifications', notificationRoutes);  // Add notification routes
+app.use('/api/contact', contactRoutes); // Add contact routes
 
 // Make socket.io instance available to the request object
 app.set('io', io);

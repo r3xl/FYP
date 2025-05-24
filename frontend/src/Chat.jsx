@@ -714,21 +714,33 @@ const handleTyping = () => {
   
   // Delete a conversation
   const deleteConversation = async (conversationId) => {
-    if (!window.confirm('Are you sure you want to delete this conversation?') || !user) {
+    if (!window.confirm('Are you sure you want to delete this conversation? It will only be removed from your view.') || !user) {
       return;
     }
     
     try {
-      await axios.delete(`${API_URL}/chat/conversations/${conversationId}`, config);
+      const response = await axios.delete(`${API_URL}/chat/conversations/${conversationId}`, config);
       
-      // Remove from state and reset current if needed
-      setConversations(conversations.filter(conv => conv._id !== conversationId));
-      if (currentConversation?._id === conversationId) {
-        setCurrentConversation(null);
+      if (response.data.success) {
+        // Remove from state and reset current if needed
+        setConversations(conversations.filter(conv => conv._id !== conversationId));
+        if (currentConversation?._id === conversationId) {
+          setCurrentConversation(null);
+        }
+        
+        // Show success message indicating it's a soft delete
+        toast.success('Conversation removed from your view. Other participants can still see it.');
       }
     } catch (error) {
       console.error('Error deleting conversation:', error);
       setError('Failed to delete conversation');
+      
+      // Show more specific error messages
+      if (error.response?.status === 400 && error.response?.data?.message?.includes('already deleted')) {
+        toast.error('This conversation has already been deleted from your view.');
+      } else {
+        toast.error('Failed to delete conversation: ' + (error.response?.data?.message || error.message));
+      }
     }
   };
   

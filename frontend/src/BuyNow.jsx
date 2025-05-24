@@ -1318,15 +1318,27 @@ const confirmDelete = (car, e) => {
                         <span role="img" aria-label="search">🔍</span>
                       </button>
                     </div>
-                    <button 
-                      className="filter-button" 
-                      onClick={() => setShowFilterModal(true)}
-                    >
-                      Filter Options
-                      {(filters.brands.length > 0 || filters.carTypes.length > 0 || filters.has3DModel !== null) && (
-                        <span className="filter-badge"></span>
-                      )}
-                    </button>
+                    
+                    <div className="action-buttons">
+                      <button 
+                        className="filter-button" 
+                        onClick={() => setShowFilterModal(true)}
+                      >
+                        Filter Options
+                        {(filters.brands.length > 0 || filters.carTypes.length > 0 || filters.has3DModel !== null) && (
+                          <span className="filter-badge"></span>
+                        )}
+                      </button>
+                      
+                      <button 
+                        className="chat-button" 
+                        onClick={() => navigate('/chat')}
+                        aria-label="Open chat"
+                      >
+                        <span role="img" aria-label="chat">💬</span>
+                        Chat
+                      </button>
+                    </div>
                   </div>
 
                   {/* Filter Modal */}

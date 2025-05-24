@@ -10,6 +10,17 @@ const Homepage = () => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null); // Add state for userId
   
+  // Contact form state
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  
   // Slider state
   const [currentSlide, setCurrentSlide] = useState(0);
   
@@ -71,6 +82,76 @@ const Homepage = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // Handle contact form input changes
+  const handleContactFormChange = (e) => {
+    const { name, value } = e.target;
+    setContactForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle contact form submission
+  const handleContactFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitMessage('');
+  
+    // Validate form data before sending
+    if (!contactForm.name || !contactForm.email || !contactForm.phone || !contactForm.subject || !contactForm.message) {
+      setSubmitMessage('Please fill in all required fields.');
+      setIsSubmitting(false);
+      return;
+    }
+  
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contactForm.email)) {
+      setSubmitMessage('Please enter a valid email address.');
+      setIsSubmitting(false);
+      return;
+    }
+  
+    try {
+      console.log('Sending contact form data:', contactForm);
+      
+      const response = await fetch('http://localhost:5000/api/contact/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: contactForm.name,
+          email: contactForm.email,
+          phone: contactForm.phone,
+          subject: contactForm.subject,
+          message: contactForm.message
+        }),
+      });
+  
+      const data = await response.json();
+      console.log('Response from server:', data);
+  
+      if (response.ok && data.success) {
+        setSubmitMessage('Message sent successfully! We will get back to you soon.');
+        setContactForm({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        setSubmitMessage(data.message || 'Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      setSubmitMessage('Failed to send message. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Set user ID from localStorage and fetch car listings on component mount
   useEffect(() => {
     // Get user ID from localStorage and set it in state
@@ -118,7 +199,7 @@ const Homepage = () => {
       {/* Navigation */}
       <header className="header">
         <div className="logo">
-          <span className="logo-icon">🚗</span>
+          {/* <span className="logo-icon"> <img src = "/images/icons/autovision.png"></img></span> */}
           AutoVision
         </div>
         <nav className="navbar">
@@ -356,29 +437,63 @@ const Homepage = () => {
     </div>
     
     <div className="contact-form-wrapper">
-      <form className="enhanced-contact-form">
+      <form className="enhanced-contact-form" onSubmit={handleContactFormSubmit}>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="name">Full Name</label>
-            <input type="text" id="name" className="form-input-enhanced" placeholder="John Doe" />
+            <input 
+              type="text" 
+              id="name" 
+              name="name"
+              className="form-input-enhanced" 
+              placeholder="John Doe" 
+              value={contactForm.name}
+              onChange={handleContactFormChange}
+              required
+            />
           </div>
           
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
-            <input type="email" id="email" className="form-input-enhanced" placeholder="john@example.com" />
+            <input 
+              type="email" 
+              id="email" 
+              name="email"
+              className="form-input-enhanced" 
+              placeholder="john@example.com" 
+              value={contactForm.email}
+              onChange={handleContactFormChange}
+              required
+            />
           </div>
         </div>
         
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="phone">Phone Number</label>
-            <input type="tel" id="phone" className="form-input-enhanced" placeholder="(977) 9812345678" />
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone"
+              className="form-input-enhanced" 
+              placeholder="(977) 9812345678" 
+              value={contactForm.phone}
+              onChange={handleContactFormChange}
+              required
+            />
           </div>
           
           <div className="form-group">
             <label htmlFor="subject">Subject</label>
-            <select id="subject" className="form-input-enhanced">
-              <option value="" disabled selected>Select a subject</option>
+            <select 
+              id="subject" 
+              name="subject"
+              className="form-input-enhanced"
+              value={contactForm.subject}
+              onChange={handleContactFormChange}
+              required
+            >
+              <option value="" disabled>Select a subject</option>
               <option value="service">Car Service</option>
               <option value="sales">Car Sales</option>
               <option value="support">Customer Support</option>
@@ -389,11 +504,25 @@ const Homepage = () => {
         
         <div className="form-group">
           <label htmlFor="message">Your Message</label>
-          <textarea id="message" className="form-textarea-enhanced" placeholder="How can we help you today?"></textarea>
+          <textarea 
+            id="message" 
+            name="message"
+            className="form-textarea-enhanced" 
+            placeholder="How can we help you today?"
+            value={contactForm.message}
+            onChange={handleContactFormChange}
+            required
+          ></textarea>
         </div>
         
-        <button type="submit" className="btn-contact-submit">
-          Send Message
+        {submitMessage && (
+          <div className={`submit-message ${submitMessage.includes('successfully') ? 'success' : 'error'}`}>
+            {submitMessage}
+          </div>
+        )}
+        
+        <button type="submit" className="btn-contact-submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Sending...' : 'Send Message'}
           <span className="submit-icon">→</span>
         </button>
       </form>

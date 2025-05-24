@@ -39,12 +39,19 @@ export const createOrGetConversation = async (req, res) => {
       conversation = new Conversation({
         participants: sortedParticipantIds,
         messages: [],
-        carId: carId || null // Store carId if provided
+        carId: carId || null, // Store carId if provided
+        hiddenFor: [] // Initialize as empty array
       });
       await conversation.save();
       // Re-populate participants after saving
       conversation = await Conversation.findById(conversation._id)
         .populate('participants', 'name email');
+    } else {
+      // If conversation exists but is hidden for current user, unhide it
+      if (conversation.isHiddenFor(currentUserId)) {
+        conversation.unhideForUser(currentUserId);
+        await conversation.save();
+      }
     }
     
     res.status(200).json({
@@ -60,14 +67,15 @@ export const createOrGetConversation = async (req, res) => {
   }
 };
 
-// Get all conversations for current user
+// Get all conversations for current user (excluding hidden ones)
 export const getUserConversations = async (req, res) => {
   try {
     const userId = req.user.userId;
     
-    // Find all conversations where the user is a participant
+    // Find all conversations where the user is a participant and hasn't hidden it
     const conversations = await Conversation.find({ 
-      participants: userId 
+      participants: userId,
+      hiddenFor: { $ne: userId } // Exclude conversations hidden for this user
     })
     .populate('participants', 'name email')
     .populate({
@@ -127,6 +135,14 @@ export const getConversation = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Access denied: You are not a participant in this conversation'
+      });
+    }
+    
+    // Check if conversation is hidden for this user
+    if (conversation.isHiddenFor(userId)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Conversation not found'
       });
     }
     
@@ -205,6 +221,16 @@ export const sendMessage = async (req, res) => {
     
     conversation.messages.push(newMessage);
     conversation.lastActivity = new Date();
+    
+    // Unhide conversation for all participants who may have hidden it
+    // This ensures that when someone sends a message, the conversation reappears
+    // for anyone who had previously "deleted" it
+    conversation.participants.forEach(participantId => {
+      if (conversation.isHiddenFor(participantId)) {
+        conversation.unhideForUser(participantId);
+      }
+    });
+    
     await conversation.save();
     
     // Create notifications for all other participants
@@ -257,7 +283,7 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-// Delete a conversation (only if all participants agree, to be implemented later)
+// Soft delete a conversation (hide it for the current user only)
 export const deleteConversation = async (req, res) => {
   try {
     const { id } = req.params;
@@ -281,14 +307,21 @@ export const deleteConversation = async (req, res) => {
       });
     }
     
-    // For now, just let any participant delete the conversation
-    // In a production app, you might want to implement a more sophisticated
-    // mechanism where both participants need to agree to delete
-    await Conversation.findByIdAndDelete(id);
+    // Check if conversation is already hidden for this user
+    if (conversation.isHiddenFor(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Conversation is already deleted for this user'
+      });
+    }
+    
+    // Hide the conversation for this user only
+    conversation.hideForUser(userId);
+    await conversation.save();
     
     res.status(200).json({
       success: true,
-      message: 'Conversation deleted successfully'
+      message: 'Conversation deleted successfully (hidden from your view)'
     });
   } catch (error) {
     console.error('Error deleting conversation:', error);
@@ -338,4 +371,3 @@ export const searchUsers = async (req, res) => {
     });
   }
 };
-
