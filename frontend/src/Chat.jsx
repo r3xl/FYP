@@ -722,15 +722,26 @@ const handleTyping = () => {
       const response = await axios.delete(`${API_URL}/chat/conversations/${conversationId}`, config);
       
       if (response.data.success) {
-        // Remove from state and reset current if needed
-        setConversations(conversations.filter(conv => conv._id !== conversationId));
+        // Remove from state
+        const updatedConversations = conversations.filter(conv => conv._id !== conversationId);
+        setConversations(updatedConversations);
+        
+        // If the deleted conversation was currently selected
         if (currentConversation?._id === conversationId) {
+          // Leave the conversation room if socket is connected
+          if (socket && socket.connected) {
+            socket.emit('leave-conversation', conversationId);
+            setJoinedConversationId(null);
+          }
+          
+          // Clear current conversation
           setCurrentConversation(null);
-        }
         
         // Show success message indicating it's a soft delete
         toast.success('Conversation removed from your view. Other participants can still see it.');
+        }
       }
+      
     } catch (error) {
       console.error('Error deleting conversation:', error);
       setError('Failed to delete conversation');
@@ -851,17 +862,17 @@ const handleTyping = () => {
   
   return (
     <div className="chat-container">
-      {/* Sidebar with conversation list */}
-      <div className="sidebar">
-        <div className="sidebar-header">
-          <h2>Conversations</h2>
-          <button 
-            className="new-chat-btn"
-            onClick={toggleNewChatModal}
-          >
-            <i className="fas fa-plus"></i> New Chat
-          </button>
-        </div>
+  {/* Sidebar with conversation list */}
+  <div className="sidebar">
+    <div className="sidebar-header">
+      <h2>Conversations</h2>
+      <button 
+        className="back-to-home"
+        onClick={() => navigate("/buy")}
+      >
+        <i className="fas fa-plus"></i> Go Back
+      </button>
+    </div>
         
         {/* Conversation List */}
         <div className="conversation-list">

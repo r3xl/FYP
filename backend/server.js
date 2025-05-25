@@ -82,6 +82,27 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+app.get('/api/cars/car-listings', async (req, res) => {
+  try {
+    const carListings = await CarListing.find()
+      .populate('owner', 'name firstName lastName') // Populate owner information
+      .sort({ createdAt: -1 });
+    
+    // Process the data to include ownerName
+    const processedListings = carListings.map(car => ({
+      ...car.toObject(),
+      ownerName: car.owner?.name || 
+                 (car.firstName && car.lastName ? `${car.firstName} ${car.lastName}` : null) ||
+                 car.owner?.firstName + ' ' + car.owner?.lastName ||
+                 'Seller'
+    }));
+    
+    res.json(processedListings);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching car listings', error: error.message });
+  }
+});
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err.stack);

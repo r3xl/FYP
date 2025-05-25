@@ -17,7 +17,7 @@ import {
 
 const router = express.Router();
 
-// Chat routes - all require authentication
+// Apply authentication middleware to all chat routes
 router.use(auth);
 
 // Conversation routes
@@ -29,7 +29,7 @@ router.delete('/conversations/:id', deleteConversation);
 // Message routes
 router.post('/conversations/:id/messages', sendMessage);
 
-// User search for chat
+// User search route for chat (removed duplicate and fixed middleware)
 router.get('/users/search', searchUsers);
 
 // Notification routes

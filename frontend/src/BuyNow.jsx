@@ -181,7 +181,13 @@ const startChatWithOwner = async (car) => {
       return;
     }
     
-    console.log('Initiating chat with owner ID:', ownerId);
+    // Prevent user from chatting with themselves
+    if (ownerId === userId) {
+      toast.error("You cannot chat with yourself!");
+      return;
+    }
+    
+    console.log('Initiating chat between:', { currentUser: userId, carOwner: ownerId });
     
     // Create API config with auth token
     const config = {
@@ -192,12 +198,17 @@ const startChatWithOwner = async (car) => {
     
     try {
       // Create a new conversation or get existing one with this owner
+      // FIXED: Include both user IDs to properly identify the conversation
       const response = await axios.post(
         'http://localhost:5000/api/chat/conversations',
-        { participantIds: [ownerId] },
+        { 
+          participantIds: [userId, ownerId] // Include both participants
+        },
         config
       );
+      
       console.log('Conversation created/retrieved:', response.data);
+      
       // Navigate to chat with this conversation open
       navigate('/chat', { 
         state: { 
@@ -205,10 +216,12 @@ const startChatWithOwner = async (car) => {
           carInfo: {
             id: car._id,
             brand: car.brand,
-            model: car.carName
+            model: car.carName,
+            ownerId: ownerId // Pass owner ID for reference
           }
         }
       });
+      
     } catch (error) {
       console.error('API Error:', error.response?.data || error.message);
       
@@ -217,7 +230,10 @@ const startChatWithOwner = async (car) => {
         // Handle unauthorized - token might be expired
         toast.error('Your session has expired. Please log in again.');
         localStorage.removeItem('token'); // Clear invalid token
+        localStorage.removeItem('userId'); // Clear user ID as well
         navigate('/login');
+      } else if (error.response?.status === 404) {
+        toast.error('Car owner not found. This listing might be outdated.');
       } else {
         toast.error('Failed to start chat: ' + (error.response?.data?.message || error.message));
       }
@@ -367,7 +383,17 @@ const startChatWithOwner = async (car) => {
           throw new Error('Failed to fetch car listings');
         }
         const data = await response.json();
-        setCarListings(data);
+        
+        // Process the data to ensure owner names are available
+        const processedData = data.map(car => ({
+          ...car,
+          ownerName: car.ownerName || 
+                     (car.firstName && car.lastName ? `${car.firstName} ${car.lastName}` : null) ||
+                     car.owner?.name ||
+                     'Seller'
+        }));
+        
+        setCarListings(processedData);
         setAvailableBrands(allBrandsFromSellPage);
         setAvailableCarTypes(allCarTypesFromSellPage);
         setLoading(false);
@@ -379,7 +405,7 @@ const startChatWithOwner = async (car) => {
     };
   
     fetchCarListings();
-  }, []); // removed [location.state]
+  }, []);
   
 
   useEffect(() => {
@@ -1228,20 +1254,25 @@ const confirmDelete = (car, e) => {
                   </div>
                   
                   <div className="detail-section">
-                    <h3>Contact Information</h3>
-                    <div className="detail-row">
-                      <span className="detail-label">Seller:</span>
-                      <span className="detail-value">{selectedCar.ownerName}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Email:</span>
-                      <span className="detail-value">{selectedCar.email}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Phone:</span>
-                      <span className="detail-value">{selectedCar.phone}</span>
-                    </div>
+                  <h3>Contact Information</h3>
+                  <div className="detail-row">
+                    <span className="detail-label">Seller:</span>
+                    <span className="detail-value">
+                      {selectedCar.ownerName || 
+                      selectedCar.firstName + ' ' + selectedCar.lastName || 
+                      selectedCar.owner?.name || 
+                      'Seller Name Not Available'}
+                    </span>
                   </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Email:</span>
+                    <span className="detail-value">{selectedCar.email}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Phone:</span>
+                    <span className="detail-value">{selectedCar.phone}</span>
+                  </div>
+                </div>
                 </div>
                 
                 {/* Action buttons - for owner and buyers */}

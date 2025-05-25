@@ -48,6 +48,8 @@ const fileFields = [
   { name: 'model3d', maxCount: 1 }
 ];
 
+
+
 // Routes
 router.post('/car-listings', auth, upload.fields(fileFields), createCarListing);
 router.get('/car-listings', getAllCarListings);

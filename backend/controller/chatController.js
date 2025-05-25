@@ -336,38 +336,31 @@ export const deleteConversation = async (req, res) => {
 export const searchUsers = async (req, res) => {
   try {
     const { query } = req.query;
-    const currentUserId = req.user.userId;
     
     if (!query) {
-      return res.status(400).json({
-        success: false,
-        message: 'Search query is required'
-      });
+      return res.status(400).json({ message: 'Search query is required' });
     }
+
+    const regex = new RegExp(query, 'i'); // Case-insensitive search
     
-    // Find users matching the query but exclude admins and current user
     const users = await User.find({
-      $and: [
-        { _id: { $ne: currentUserId } },  // Not the current user
-        { role: { $ne: 'admin' } },       // Not an admin
-        {
-          $or: [
-            { name: { $regex: query, $options: 'i' } },  // Case-insensitive name search
-            { email: { $regex: query, $options: 'i' } }  // Case-insensitive email search
-          ]
-        }
-      ]
-    }).select('name email');
-    
-    res.status(200).json({
-      success: true,
-      users
-    });
+      $or: [
+        { firstName: regex },
+        { lastName: regex },
+        { email: regex }
+      ],
+      _id: { $ne: req.user.userId } // Exclude the current user
+    }).select('firstName lastName email _id');
+
+    const formattedUsers = users.map(user => ({
+      _id: user._id,
+      name: `${user.firstName} ${user.lastName}`,
+      email: user.email
+    }));
+
+    res.json({ users: formattedUsers });
   } catch (error) {
     console.error('Error searching users:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error: ' + error.message
-    });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
